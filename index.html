@@ -1,1151 +1,1209 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Upload, 
-  Crop, 
-  Maximize2, 
-  Eraser, 
-  Download, 
-  Undo, 
-  Redo, 
-  Check, 
-  X,
-  Sliders,
-  ZoomIn,
-  ZoomOut,
-  Trash2,
-  Globe,
-  Type,
-  Sparkles,
-  Maximize,
-  Image as ImageIcon,
-  ScanLine,
-  Wand2,
-  RefreshCw,
-  Video,
-  FileVideo
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelCraft - Professional Creative Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- GifShot for Video to GIF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
 
-/**
- * TRANSLATIONS (Traditional Chinese)
- */
-const TRANSLATIONS = {
-  en: {
-    appTitle: "PixelCraft",
-    subtitle: "Professional creative studio for your browser.",
-    uploadTitle: "Click or drag image/video",
-    uploadDesc: "Supports PNG, JPG, WEBP, SVG, MP4",
-    smartResize: "Smart Resize",
-    easyCrop: "Easy Crop",
-    magicEraser: "Magic Eraser",
-    addText: "Add Text",
-    addOverlay: "Add Overlay",
-    converter: "Converter",
-    undo: "Undo",
-    redo: "Redo",
-    reset: "Reset",
-    crop: "Crop",
-    resize: "Resize",
-    removeBg: "Remove BG",
-    text: "Text",
-    overlay: "Overlay",
-    convert: "Convert",
-    videoToGif: "Video to GIF",
-    cropImage: "Crop Image",
-    dragHandles: "Drag the handles to adjust the crop area.",
-    free: "Free",
-    original: "Original",
-    applyCrop: "Apply Crop",
-    resizeImage: "Resize Image",
-    percentage: "Percentage",
-    width: "Width",
-    height: "Height",
-    lockAspect: "Lock Aspect Ratio",
-    fitMax: "Fit Max Area",
-    applyResize: "Apply Resize",
-    removeBackground: "Remove Background",
-    magicWand: "Magic Wand",
-    magicWandDesc: "Click on image to remove color.",
-    autoRemove: "Auto Remove BG",
-    outlineOnly: "Outline Only",
-    tolerance: "Tolerance",
-    toleranceDesc: "Adjust color sensitivity.",
-    done: "Done",
-    exportImage: "Export / Convert",
-    fileName: "File Name",
-    format: "Target Format",
-    quality: "Quality",
-    downloadImage: "Download File",
-    zoomed: "Zoom",
-    imageCropped: "Image cropped successfully!",
-    imageResized: "Resized to",
-    bgRemoved: "Background removed!",
-    imageDownloaded: "File downloaded!",
-    unit: "Unit",
-    estSize: "Est. Size",
-    textInput: "Text Input",
-    textColor: "Color",
-    textSize: "Size",
-    applyText: "Apply Text",
-    uploadOverlay: "Upload Image",
-    overlaySize: "Overlay Size",
-    applyOverlay: "Apply Overlay",
-    textAdded: "Text added!",
-    overlayAdded: "Overlay added!",
-    gifDuration: "Duration (sec)",
-    createGif: "Create GIF",
-    gifGenerating: "Generating GIF...",
-    videoFrame: "Video Frame",
-    captureFrame: "Use Current Frame"
-  },
-  zh: {
-    appTitle: "像素工坊",
-    subtitle: "為您的瀏覽器打造的專業創意工作室。",
-    uploadTitle: "點擊或拖曳上傳圖片/影片",
-    uploadDesc: "支援 PNG, JPG, WEBP, SVG, MP4",
-    smartResize: "智能調整",
-    easyCrop: "簡單裁剪",
-    magicEraser: "魔法消除",
-    addText: "添加文字",
-    addOverlay: "添加圖片",
-    converter: "格式轉換",
-    undo: "復原",
-    redo: "重做",
-    reset: "重置",
-    crop: "裁剪",
-    resize: "調整大小",
-    removeBg: "移除背景",
-    text: "文字",
-    overlay: "貼圖",
-    convert: "轉換",
-    videoToGif: "影片轉GIF",
-    cropImage: "裁剪圖片",
-    dragHandles: "拖曳控制點以調整裁剪區域。",
-    free: "自由",
-    original: "原始比例",
-    applyCrop: "應用裁剪",
-    resizeImage: "調整圖片大小",
-    percentage: "百分比",
-    width: "寬度",
-    height: "高度",
-    lockAspect: "鎖定長寬比",
-    fitMax: "最大範圍",
-    applyResize: "應用調整",
-    removeBackground: "移除背景",
-    magicWand: "魔棒工具",
-    magicWandDesc: "點擊圖片移除顏色。",
-    autoRemove: "自動移除背景",
-    outlineOnly: "僅保留輪廓",
-    tolerance: "容差",
-    toleranceDesc: "調整顏色敏感度。",
-    done: "完成",
-    exportImage: "導出 / 轉換",
-    fileName: "檔案名稱",
-    format: "目標格式",
-    quality: "品質",
-    downloadImage: "下載檔案",
-    zoomed: "縮放",
-    imageCropped: "圖片裁剪成功！",
-    imageResized: "已調整大小為",
-    bgRemoved: "背景已移除！",
-    imageDownloaded: "檔案已下載！",
-    unit: "單位",
-    estSize: "預估大小",
-    textInput: "輸入文字",
-    textColor: "顏色",
-    textSize: "大小",
-    applyText: "應用文字",
-    uploadOverlay: "上傳圖片",
-    overlaySize: "貼圖大小",
-    applyOverlay: "應用貼圖",
-    textAdded: "文字已添加！",
-    overlayAdded: "貼圖已添加！",
-    gifDuration: "時長 (秒)",
-    createGif: "製作 GIF",
-    gifGenerating: "正在生成 GIF...",
-    videoFrame: "影片畫格",
-    captureFrame: "使用當前畫格"
-  }
-};
+    <style>
+        /* Custom Styles */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .checkered-bg {
+            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+                              linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+                              linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
 
-/**
- * UTILITY FUNCTIONS & CONSTANTS
- */
-const UNITS = {
-  px: { label: 'px', factor: 1 },
-  in: { label: 'inch', factor: 96 },
-  cm: { label: 'cm', factor: 37.795 },
-  mm: { label: 'mm', factor: 3.7795 }
-};
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #7c3aed; /* violet-600 */
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
 
-const readFileAsDataURL = (file) => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.readAsDataURL(file);
-  });
-};
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translate(-50%, -10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .animate-fade-in-down {
+            animation: fadeInDown 0.3s ease-out forwards;
+        }
+        
+        /* Handles */
+        .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #7c3aed;
+            border: 2px solid white;
+            border-radius: 50%;
+            z-index: 20;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Font Sizes */
+        .text-size-small { font-size: 14px; }
+        .text-size-normal { font-size: 16px; }
+        .text-size-large { font-size: 18px; }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex flex-col overflow-hidden text-size-normal" id="app-body">
 
-const loadImage = (src) => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.src = src;
-  });
-};
+    <!-- LANDING PAGE (Initial State) -->
+    <div id="landing-page" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="flex justify-end w-full absolute top-0 p-4 gap-2">
+            <button onclick="toggleLang()" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                <i data-lucide="globe" class="w-4 h-4"></i> <span id="lang-btn-text">English</span>
+            </button>
+        </div>
 
-const formatBytes = (bytes, decimals = 2) => {
-    if (!+bytes) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-};
-
-// --- MAIN COMPONENT ---
-export default function ImageEditorApp() {
-  const [lang, setLang] = useState('en');
-  const [fontSize, setFontSize] = useState('normal'); 
-  const t = TRANSLATIONS[lang];
-
-  const [imageSrc, setImageSrc] = useState(null);
-  const [videoSrc, setVideoSrc] = useState(null); // New: Video support
-  const [history, setHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [activeTool, setActiveTool] = useState(null); 
-  const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const [fileSizePreview, setFileSizePreview] = useState(null);
-
-  // Editor State
-  const canvasContainerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const videoRef = useRef(null); // New: Video element ref
-  
-  const [zoom, setZoom] = useState(1);
-  const [currentDimensions, setCurrentDimensions] = useState({ w: 0, h: 0 });
-
-  // Tool States
-  const [cropRect, setCropRect] = useState(null); 
-  const [lockCropAspect, setLockCropAspect] = useState(false);
-  const [activeUnit, setActiveUnit] = useState('px');
-  
-  const [resizeConfig, setResizeConfig] = useState({ width: 0, height: 0, maintainAspect: true, scale: 100 });
-  const [bgRemoveConfig, setBgRemoveConfig] = useState({ tolerance: 20, active: false });
-  const [textConfig, setTextConfig] = useState({ text: 'Hello World', x: 0.5, y: 0.5, size: 50, color: '#ffffff' });
-  const [overlayConfig, setOverlayConfig] = useState({ src: null, x: 0.5, y: 0.5, scale: 0.3, imgObj: null });
-  const [gifConfig, setGifConfig] = useState({ duration: 2, generating: false }); // GIF config
-  
-  const [exportConfig, setExportConfig] = useState({ format: 'image/jpeg', quality: 0.9, name: 'edited-image' });
-
-  // Load GIFShot library
-  useEffect(() => {
-    if (!document.getElementById('gifshot-script')) {
-        const script = document.createElement('script');
-        script.id = 'gifshot-script';
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js';
-        document.body.appendChild(script);
-    }
-  }, []);
-
-  // Helper to convert display values
-  const toDisplayValue = (pxValue) => (pxValue / UNITS[activeUnit].factor).toFixed(activeUnit === 'px' ? 0 : 2);
-  const fromDisplayValue = (displayVal) => Math.round(parseFloat(displayVal) * UNITS[activeUnit].factor);
-
-  const addToHistory = (newSrc) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newSrc);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-    setImageSrc(newSrc);
-    // If we add an image to history, we are no longer in "Video Mode" strictly, 
-    // we are editing a frame (snapshot)
-    if (videoSrc) setVideoSrc(null); 
-  };
-
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prevSrc = history[historyIndex - 1];
-      setHistoryIndex(historyIndex - 1);
-      setImageSrc(prevSrc);
-      resetTools();
-    }
-  };
-
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextSrc = history[historyIndex + 1];
-      setHistoryIndex(historyIndex + 1);
-      setImageSrc(nextSrc);
-      resetTools();
-    }
-  };
-
-  const resetTools = () => {
-    setActiveTool(null);
-    setCropRect(null);
-    setLockCropAspect(false);
-    setBgRemoveConfig({ ...bgRemoveConfig, active: false });
-    setOverlayConfig({ ...overlayConfig, src: null, imgObj: null });
-  };
-
-  const fitImageToScreen = (imgWidth, imgHeight) => {
-    if (canvasContainerRef.current) {
-        const { clientWidth, clientHeight } = canvasContainerRef.current;
-        const padding = 80;
-        const availableW = clientWidth - padding;
-        const availableH = clientHeight - padding;
-        const scaleW = availableW / imgWidth;
-        const scaleH = availableH / imgHeight;
-        const fitScale = Math.min(scaleW, scaleH, 1);
-        setZoom(fitScale);
-    }
-  };
-
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setIsLoading(true);
-      const fileUrl = URL.createObjectURL(file);
-
-      if (file.type.startsWith('video/')) {
-          setVideoSrc(fileUrl);
-          setImageSrc(null); // Clear image mode
-          setHistory([]);
-          setExportConfig(prev => ({ ...prev, name: file.name.split('.')[0] }));
-          
-          // Wait for video metadata to set dimensions
-          setTimeout(() => {
-              if (videoRef.current) {
-                 setCurrentDimensions({ w: videoRef.current.videoWidth, h: videoRef.current.videoHeight });
-                 fitImageToScreen(videoRef.current.videoWidth, videoRef.current.videoHeight);
-              }
-          }, 500);
-
-      } else {
-          // Image
-          const dataUrl = await readFileAsDataURL(file);
-          const img = await loadImage(dataUrl);
-          
-          setVideoSrc(null);
-          setCurrentDimensions({ w: img.width, h: img.height });
-          setResizeConfig({ width: img.width, height: img.height, maintainAspect: true, scale: 100 });
-
-          setHistory([dataUrl]);
-          setHistoryIndex(0);
-          setImageSrc(dataUrl);
-          setExportConfig(prev => ({ ...prev, name: file.name.split('.')[0] }));
-          
-          setTimeout(() => fitImageToScreen(img.width, img.height), 10);
-      }
-      setIsLoading(false);
-    }
-  };
-
-  const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  // --- CALCULATE FILE SIZE PREVIEW ---
-  useEffect(() => {
-    if ((activeTool === 'export' || activeTool === 'resize') && canvasRef.current && !videoSrc) {
-        const timeout = setTimeout(() => {
-            const { format, quality } = exportConfig;
+        <div class="max-w-xl w-full text-center space-y-8 -mt-16">
+            <div class="space-y-2">
+                <div class="flex justify-center mb-4">
+                    <div class="w-20 h-20 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200">
+                        <i data-lucide="sparkles" class="w-10 h-10"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold text-slate-900 tracking-tight" id="landing-title">PixelCraft</h1>
+                <p class="text-slate-500 text-lg" id="landing-subtitle">Professional creative studio for your browser.</p>
+            </div>
             
-            if (activeTool === 'resize') {
-                 // Estimation logic for resize
-                 const tempCanvas = document.createElement('canvas');
-                 tempCanvas.width = resizeConfig.width; tempCanvas.height = resizeConfig.height;
-                 const ctx = tempCanvas.getContext('2d');
-                 ctx.drawImage(canvasRef.current, 0, 0, resizeConfig.width, resizeConfig.height);
-                 tempCanvas.toBlob(blob => blob && setFileSizePreview(formatBytes(blob.size)), format, quality);
-            } else {
-                 if (format === 'image/svg+xml') {
-                    // Estimate SVG size (base64 length + wrapper)
-                    const data = canvasRef.current.toDataURL('image/png'); // Embed PNG in SVG
-                    setFileSizePreview(formatBytes(data.length + 200)); 
-                 } else {
-                    canvasRef.current.toBlob(blob => blob && setFileSizePreview(formatBytes(blob.size)), format, quality);
-                 }
+            <div class="relative group cursor-pointer" onclick="document.getElementById('file-upload').click()">
+                <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
+                <div class="relative bg-white rounded-xl p-12 border-2 border-dashed border-slate-300 hover:border-violet-500 transition-colors flex flex-col items-center justify-center space-y-4 shadow-sm">
+                    <input type="file" id="file-upload" class="hidden" accept="image/*,video/*,.svg" onchange="handleUpload(event)">
+                    <div class="w-16 h-16 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center">
+                        <i data-lucide="upload" class="w-8 h-8"></i>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-lg font-medium text-slate-700" id="landing-upload-title">Click or drag image/video</p>
+                        <p class="text-sm text-slate-400 mt-1" id="landing-upload-desc">Supports PNG, JPG, WEBP, SVG, MP4</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN EDITOR (Hidden by default) -->
+    <div id="editor-page" class="h-full flex flex-col hidden">
+        <!-- HEADER -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+            <div class="flex items-center gap-2 font-bold text-xl text-slate-800">
+                <div class="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-indigo-700 font-extrabold tracking-tight" id="header-title">PixelCraft</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="toggleFontSize()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-[0.75em] font-medium text-slate-600 hover:bg-slate-100 transition-colors" title="Toggle Font Size">
+                    <i data-lucide="type" class="w-3 h-3"></i> <span class="capitalize" id="font-size-label">Normal</span>
+                </button>
+                <button onclick="toggleLang()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-[0.75em] font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i data-lucide="globe" class="w-3 h-3"></i> <span id="header-lang-text">EN/中</span>
+                </button>
+                <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                    <button onclick="adjustZoom(-0.1)" class="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                    <span id="zoom-level" class="text-[0.75em] font-medium w-12 text-center text-slate-600">100%</span>
+                    <button onclick="adjustZoom(0.1)" class="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                </div>
+                <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                <div id="history-controls" class="flex gap-2">
+                    <button onclick="handleUndo()" id="btn-undo" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium text-slate-300 cursor-not-allowed"><i data-lucide="undo" class="w-4 h-4"></i> <span data-t="undo">Undo</span></button>
+                    <button onclick="handleRedo()" id="btn-redo" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium text-slate-300 cursor-not-allowed"><i data-lucide="redo" class="w-4 h-4"></i> <span data-t="redo">Redo</span></button>
+                </div>
+                <button onclick="resetApp()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium text-red-600 hover:bg-red-50 transition-colors">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline" data-t="reset">Reset</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <!-- LEFT TOOLBAR -->
+            <div id="toolbar" class="w-20 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-4 shrink-0 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.05)] overflow-y-auto">
+                <!-- Tools injected by JS -->
+            </div>
+
+            <!-- CENTER CANVAS -->
+            <div id="canvas-container" class="flex-1 relative bg-slate-50/50 overflow-hidden flex items-center justify-center p-0 checkered-bg select-none" onwheel="handleScrollZoom(event)">
+                
+                <!-- Notification -->
+                <div id="notification" class="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-full text-[0.875em] font-medium shadow-lg hidden transition-opacity duration-300"></div>
+
+                <div id="canvas-wrapper" class="relative shadow-2xl transition-transform duration-100 ease-out origin-center">
+                    <canvas id="main-canvas" class="block bg-white cursor-default"></canvas>
+                    <video id="main-video" class="block bg-black hidden" controls></video>
+                    
+                    <!-- Overlays Container -->
+                    <div id="overlay-layer" class="absolute inset-0 pointer-events-none"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT SETTINGS PANEL -->
+            <div id="settings-panel" class="w-80 bg-white border-l border-slate-200 p-6 flex flex-col shrink-0 animate-slide-in-right z-10 shadow-xl overflow-y-auto hidden">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Input for Overlay Upload -->
+    <input type="file" id="overlay-upload" class="hidden" accept="image/*" onchange="handleOverlayFile(event)">
+
+    <script>
+        /**
+         * STATE & CONFIG
+         */
+        const state = {
+            lang: 'en',
+            fontSize: 'normal',
+            imageSrc: null,
+            videoSrc: null,
+            history: [],
+            historyIndex: -1,
+            activeTool: null,
+            zoom: 1,
+            originalDims: { w: 0, h: 0 },
+            currentDims: { w: 0, h: 0 },
+            
+            // Tool Configs
+            crop: { rect: null, lockAspect: false },
+            resize: { width: 0, height: 0, maintainAspect: true, scale: 100 },
+            bgRemove: { tolerance: 20 },
+            text: { text: 'Hello World', x: 0.5, y: 0.5, size: 50, color: '#ffffff' },
+            overlay: { src: null, img: null, x: 0.5, y: 0.5, scale: 0.3 },
+            gif: { duration: 2, generating: false },
+            export: { name: 'edited-image', format: 'image/jpeg', quality: 0.9 },
+            fileSizePreview: null
+        };
+
+        const TRANSLATIONS = {
+            en: {
+                appTitle: "PixelCraft", subtitle: "Professional creative studio for your browser.",
+                uploadTitle: "Click or drag image/video", uploadDesc: "Supports PNG, JPG, WEBP, SVG, MP4",
+                crop: "Crop", resize: "Resize", removeBg: "Remove BG", text: "Text", overlay: "Overlay", export: "Export", convert: "Convert",
+                undo: "Undo", redo: "Redo", reset: "Reset",
+                cropImage: "Crop Image", dragHandles: "Drag handles to crop.", free: "Free", original: "Original", applyCrop: "Apply Crop", lockAspect: "Lock Ratio", fitMax: "Fit Max",
+                resizeImage: "Resize Image", percentage: "Percentage", width: "Width", height: "Height", applyResize: "Apply Resize", estSize: "Est. Size",
+                removeBackground: "Remove Background", magicWand: "Magic Wand", magicWandDesc: "Click image to remove color.", autoRemove: "Auto Remove", outlineOnly: "Outline", tolerance: "Tolerance", done: "Done",
+                addText: "Add Text", textInput: "Text Input", textColor: "Color", textSize: "Size", applyText: "Apply Text",
+                addOverlay: "Add Overlay", uploadOverlay: "Upload Image", overlaySize: "Size", applyOverlay: "Apply Overlay", changeImage: "Change Image",
+                videoToGif: "Video to GIF", gifDuration: "Duration (s)", createGif: "Create GIF", generating: "Generating...", videoFrame: "Video Frame", captureFrame: "Capture Frame",
+                exportImage: "Export / Convert", fileName: "File Name", format: "Format", quality: "Quality", downloadImage: "Download File",
+                imageCropped: "Image cropped!", imageResized: "Resized!", bgRemoved: "Background removed!", textAdded: "Text added!", overlayAdded: "Overlay added!", imageDownloaded: "Downloaded!"
+            },
+            zh: {
+                appTitle: "像素工坊", subtitle: "為您的瀏覽器打造的專業創意工作室。",
+                uploadTitle: "點擊或拖曳上傳圖片/影片", uploadDesc: "支援 PNG, JPG, WEBP, SVG, MP4",
+                crop: "裁剪", resize: "調整大小", removeBg: "移除背景", text: "文字", overlay: "貼圖", export: "導出", convert: "轉換",
+                undo: "復原", redo: "重做", reset: "重置",
+                cropImage: "裁剪圖片", dragHandles: "拖曳控制點以調整裁剪區域。", free: "自由", original: "原始比例", applyCrop: "應用裁剪", lockAspect: "鎖定比例", fitMax: "最大範圍",
+                resizeImage: "調整圖片大小", percentage: "百分比", width: "寬度", height: "高度", applyResize: "應用調整", estSize: "預估大小",
+                removeBackground: "移除背景", magicWand: "魔棒工具", magicWandDesc: "點擊圖片移除顏色。", autoRemove: "自動移除", outlineOnly: "輪廓", tolerance: "容差", done: "完成",
+                addText: "添加文字", textInput: "輸入文字", textColor: "顏色", textSize: "大小", applyText: "應用文字",
+                addOverlay: "添加圖片", uploadOverlay: "上傳圖片", overlaySize: "大小", applyOverlay: "應用貼圖", changeImage: "更換圖片",
+                videoToGif: "影片轉 GIF", gifDuration: "時長 (秒)", createGif: "製作 GIF", generating: "生成中...", videoFrame: "影片畫格", captureFrame: "擷取畫格",
+                exportImage: "導出 / 轉換", fileName: "檔案名稱", format: "格式", quality: "品質", downloadImage: "下載檔案",
+                imageCropped: "圖片已裁剪！", imageResized: "已調整大小！", bgRemoved: "背景已移除！", textAdded: "文字已添加！", overlayAdded: "貼圖已添加！", imageDownloaded: "已下載！"
             }
-        }, 300);
-        return () => clearTimeout(timeout);
-    } else {
-        setFileSizePreview(null);
-    }
-  }, [exportConfig, activeTool, imageSrc, resizeConfig, videoSrc]); 
+        };
 
-  // --- ZOOM SCROLL LOGIC ---
-  const handleWheel = useCallback((e) => {
-    if (!imageSrc && !videoSrc) return;
-    const delta = e.deltaY * -0.001; 
-    setZoom(prevZoom => {
-        const newZoom = prevZoom + delta;
-        return Math.min(Math.max(0.05, newZoom), 5);
-    });
-  }, [imageSrc, videoSrc]);
+        const UNITS = { px: { label: 'px', factor: 1 }, in: { label: 'in', factor: 96 }, cm: { label: 'cm', factor: 37.795 }, mm: { label: 'mm', factor: 3.7795 } };
+        let activeUnit = 'px';
 
-  // --- RENDER CANVAS / VIDEO ---
-  useEffect(() => {
-    if (imageSrc && canvasRef.current) {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.onload = () => {
-            if (img.width !== currentDimensions.w || img.height !== currentDimensions.h) {
-                setCurrentDimensions({ w: img.width, h: img.height });
-                // Only update resize config if not actively resizing
-                if (activeTool !== 'resize') {
-                   setResizeConfig({ width: img.width, height: img.height, maintainAspect: true, scale: 100 });
+        /**
+         * INITIALIZATION
+         */
+        window.onload = () => {
+            lucide.createIcons();
+            updateUI();
+        };
+
+        function t(key) {
+            return TRANSLATIONS[state.lang][key] || key;
+        }
+
+        function updateUI() {
+            // Update Text
+            document.querySelectorAll('[data-t]').forEach(el => {
+                el.innerText = t(el.getAttribute('data-t'));
+            });
+            
+            // Landing vs Editor
+            const hasMedia = state.imageSrc || state.videoSrc;
+            document.getElementById('landing-page').classList.toggle('hidden', hasMedia);
+            document.getElementById('editor-page').classList.toggle('hidden', !hasMedia);
+
+            if (hasMedia) {
+                renderHeader();
+                renderToolbar();
+                renderCanvasArea();
+                renderSettingsPanel();
+            } else {
+                // Update landing text
+                document.getElementById('landing-title').innerText = t('appTitle');
+                document.getElementById('landing-subtitle').innerText = t('subtitle');
+                document.getElementById('landing-upload-title').innerText = t('uploadTitle');
+                document.getElementById('landing-upload-desc').innerText = t('uploadDesc');
+                document.getElementById('lang-btn-text').innerText = state.lang === 'en' ? 'English' : '繁體中文';
+            }
+            lucide.createIcons();
+        }
+
+        /**
+         * CORE ACTIONS
+         */
+        function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            state.export.name = file.name.split('.')[0];
+
+            if (file.type.startsWith('video/')) {
+                state.videoSrc = url;
+                state.imageSrc = null;
+                state.history = [];
+                state.historyIndex = -1;
+                state.activeTool = null;
+                // Wait for video metadata
+                const video = document.getElementById('main-video');
+                video.onloadedmetadata = () => {
+                    state.currentDims = { w: video.videoWidth, h: video.videoHeight };
+                    fitImageToScreen();
+                    updateUI();
+                };
+            } else {
+                const img = new Image();
+                img.onload = () => {
+                    state.imageSrc = url;
+                    state.videoSrc = null;
+                    state.currentDims = { w: img.width, h: img.height };
+                    state.resize.width = img.width;
+                    state.resize.height = img.height;
+                    
+                    // Init History
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width; canvas.height = img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL();
+                    
+                    state.history = [dataUrl];
+                    state.historyIndex = 0;
+                    state.imageSrc = dataUrl; // Use dataURL for editing
+                    
+                    fitImageToScreen();
+                    updateUI();
+                };
+                img.src = url;
+            }
+        }
+
+        function addToHistory(newSrc) {
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push(newSrc);
+            state.historyIndex++;
+            state.imageSrc = newSrc;
+            state.videoSrc = null; // Switching to image mode implies video is gone or frame captured
+            updateUI();
+        }
+
+        function handleUndo() {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                state.imageSrc = state.history[state.historyIndex];
+                resetTools();
+                updateUI();
+            }
+        }
+
+        function handleRedo() {
+            if (state.historyIndex < state.history.length - 1) {
+                state.historyIndex++;
+                state.imageSrc = state.history[state.historyIndex];
+                resetTools();
+                updateUI();
+            }
+        }
+
+        function resetApp() {
+            state.imageSrc = null;
+            state.videoSrc = null;
+            state.history = [];
+            state.activeTool = null;
+            updateUI();
+        }
+
+        function resetTools() {
+            state.activeTool = null;
+            state.crop.rect = null;
+            state.overlay.src = null;
+            updateUI();
+        }
+
+        function setActiveTool(tool) {
+            state.activeTool = tool;
+            
+            // Init tool states
+            if (tool === 'crop') {
+                state.crop.rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+                state.crop.lockAspect = false;
+            }
+            if (tool === 'resize') {
+                state.resize = { width: state.currentDims.w, height: state.currentDims.h, maintainAspect: true, scale: 100 };
+            }
+            
+            updateUI();
+        }
+
+        /**
+         * RENDERING UI PARTS
+         */
+        function renderHeader() {
+            document.getElementById('header-title').innerText = t('appTitle');
+            document.getElementById('header-lang-text').innerText = state.lang === 'en' ? 'EN/中' : '中/EN';
+            document.getElementById('font-size-label').innerText = state.fontSize;
+            document.getElementById('zoom-level').innerText = Math.round(state.zoom * 100) + '%';
+            
+            const undoBtn = document.getElementById('btn-undo');
+            const redoBtn = document.getElementById('btn-redo');
+            
+            if (state.videoSrc) {
+                document.getElementById('history-controls').classList.add('hidden');
+            } else {
+                document.getElementById('history-controls').classList.remove('hidden');
+                undoBtn.disabled = state.historyIndex <= 0;
+                undoBtn.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium transition-colors ${state.historyIndex > 0 ? 'hover:bg-slate-100 text-slate-700' : 'text-slate-300 cursor-not-allowed'}`;
+                
+                redoBtn.disabled = state.historyIndex >= state.history.length - 1;
+                redoBtn.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium transition-colors ${state.historyIndex < state.history.length - 1 ? 'hover:bg-slate-100 text-slate-700' : 'text-slate-300 cursor-not-allowed'}`;
+            }
+        }
+
+        function renderToolbar() {
+            const toolbar = document.getElementById('toolbar');
+            let html = '';
+            
+            const btnClass = (active) => `w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${active ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 scale-105' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'}`;
+            
+            if (state.videoSrc) {
+                html += `<button class="${btnClass(true)}" onclick=""><i data-lucide="file-video" class="w-6 h-6"></i><span class="text-[0.65em] font-medium">Video</span></button>`;
+                html += `<button class="${btnClass(state.activeTool === 'gif')}" onclick="setActiveTool('gif')"><i data-lucide="refresh-cw" class="w-6 h-6"></i><span class="text-[0.65em] font-medium">GIF</span></button>`;
+            } else {
+                const tools = [
+                    { id: 'crop', icon: 'crop', label: 'crop' },
+                    { id: 'resize', icon: 'maximize-2', label: 'resize' },
+                    { id: 'bgremove', icon: 'eraser', label: 'removeBg' },
+                    { sep: true },
+                    { id: 'text', icon: 'type', label: 'text' },
+                    { id: 'overlay', icon: 'image', label: 'overlay' }
+                ];
+
+                tools.forEach(tool => {
+                    if (tool.sep) {
+                        html += `<div class="w-8 h-px bg-slate-200 my-1"></div>`;
+                    } else {
+                        html += `<button class="${btnClass(state.activeTool === tool.id)}" onclick="setActiveTool('${tool.id}')">
+                            <i data-lucide="${tool.icon}" class="w-6 h-6"></i>
+                            <span class="text-[0.65em] font-medium">${t(tool.label)}</span>
+                        </button>`;
+                    }
+                });
+
+                html += `<div class="flex-1"></div>`;
+                html += `<button onclick="setActiveTool('export')" class="w-14 h-14 mb-4 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 ${state.activeTool === 'export' ? 'bg-emerald-600 text-white ring-2 ring-emerald-200 ring-offset-2' : 'bg-gradient-to-br from-slate-800 to-slate-900 text-white hover:from-slate-700 hover:to-slate-800'}">
+                    <i data-lucide="download" class="w-6 h-6"></i>
+                    <span class="text-[0.65em] font-bold">${t(state.activeTool === 'export' ? 'export' : 'convert')}</span>
+                </button>`;
+            }
+            
+            toolbar.innerHTML = html;
+        }
+
+        function renderCanvasArea() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            wrapper.style.transform = `scale(${state.zoom})`;
+            
+            const canvas = document.getElementById('main-canvas');
+            const video = document.getElementById('main-video');
+            const overlayLayer = document.getElementById('overlay-layer');
+            
+            // Clear overlays
+            overlayLayer.innerHTML = '';
+            // Reset pointer events
+            canvas.classList.remove('cursor-crosshair');
+
+            if (state.videoSrc) {
+                canvas.classList.add('hidden');
+                video.classList.remove('hidden');
+                video.src = state.videoSrc;
+                // Ensure dimensions match
+                // We rely on onloadedmetadata for initial setup
+            } else {
+                video.classList.add('hidden');
+                canvas.classList.remove('hidden');
+                
+                // Draw Image
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.onload = () => {
+                    if (canvas.width !== img.width || canvas.height !== img.height) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        state.currentDims = { w: img.width, h: img.height };
+                    }
+                    ctx.clearRect(0,0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = state.imageSrc;
+
+                // Render Overlays based on tool
+                if (state.activeTool === 'crop' && state.crop.rect) {
+                    renderCropOverlay(overlayLayer);
+                } else if (state.activeTool === 'text') {
+                    renderTextOverlay(overlayLayer);
+                } else if (state.activeTool === 'overlay' && state.overlay.src) {
+                    renderImageOverlay(overlayLayer);
+                } else if (state.activeTool === 'bgremove') {
+                    canvas.classList.add('cursor-crosshair');
+                    canvas.onclick = handleCanvasClick;
+                } else {
+                    canvas.onclick = null;
                 }
             }
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-        };
-        img.src = imageSrc;
-    }
-  }, [imageSrc, currentDimensions, activeTool]);
-
-
-  // --- TOOLS LOGIC ---
-
-  // ... (Crop, Resize, BG Remove, Text, Overlay logic same as before) ...
-  // Keeping simplified here for OneFile limit, logic is robust from previous turn
-  
-  const initCrop = () => { setActiveTool('crop'); setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }); setLockCropAspect(false); };
-  const setCropRatio = (w, h) => {
-     const currentAspect = currentDimensions.w / currentDimensions.h;
-     const targetAspect = w / h;
-     let newW = 0.6; let newH = newW * (currentAspect / targetAspect);
-     if (newH > 0.8) { newH = 0.6; newW = newH * (targetAspect / currentAspect); }
-     setCropRect({ x: (1-newW)/2, y: (1-newH)/2, w: newW, h: newH }); setLockCropAspect(true);
-  };
-  const setFixedCrop = (w, h) => {
-      const aspect = w/h;
-      let pctW = w / currentDimensions.w; let pctH = h / currentDimensions.h;
-      if (pctW > 1 || pctH > 1) {
-        const imgAspect = currentDimensions.w / currentDimensions.h;
-        if (aspect > imgAspect) { pctW = 1.0; pctH = (currentDimensions.w / aspect) / currentDimensions.h; }
-        else { pctH = 1.0; pctW = (currentDimensions.h * aspect) / currentDimensions.w; }
-      }
-      setCropRect({ x: (1-pctW)/2, y: (1-pctH)/2, w: pctW, h: pctH }); setLockCropAspect(true);
-  };
-  const handleFitMax = () => {
-      if (!cropRect) return;
-      if (!lockCropAspect) { setCropRect({x:0,y:0,w:1,h:1}); return; }
-      const pxW = cropRect.w * currentDimensions.w; const pxH = cropRect.h * currentDimensions.h;
-      const aspect = pxW/pxH; const imgAspect = currentDimensions.w / currentDimensions.h;
-      let newW, newH;
-      if (aspect > imgAspect) { newW = 1.0; const hPx = currentDimensions.w / aspect; newH = hPx / currentDimensions.h; }
-      else { newH = 1.0; const wPx = currentDimensions.h * aspect; newW = wPx / currentDimensions.w; }
-      setCropRect({ x: (1-newW)/2, y: (1-newH)/2, w: newW, h: newH });
-  };
-  const updateCropDimension = (dim, val) => {
-      if (!cropRect) return;
-      const pxVal = fromDisplayValue(val);
-      let newR = {...cropRect};
-      if (dim === 'width') {
-          const maxW = currentDimensions.w;
-          newR.w = Math.min(Math.max(1, pxVal), maxW) / maxW;
-          if (newR.x + newR.w > 1) newR.x = Math.max(0, 1 - newR.w);
-          if (lockCropAspect) { const aspect = (cropRect.w * currentDimensions.w) / (cropRect.h * currentDimensions.h); newR.h = (pxVal/aspect) / currentDimensions.h; }
-      } else {
-          const maxH = currentDimensions.h;
-          newR.h = Math.min(Math.max(1, pxVal), maxH) / maxH;
-          if (newR.y + newR.h > 1) newR.y = Math.max(0, 1 - newR.h);
-          if (lockCropAspect) { const aspect = (cropRect.w * currentDimensions.w) / (cropRect.h * currentDimensions.h); newR.w = (pxVal*aspect) / currentDimensions.w; }
-      }
-      if (newR.w <= 1 && newR.h <= 1) setCropRect(newR);
-  };
-  const applyCrop = async () => {
-    const canvas = canvasRef.current;
-    const sx = cropRect.x * canvas.width; const sy = cropRect.y * canvas.height;
-    const sw = cropRect.w * canvas.width; const sh = cropRect.h * canvas.height;
-    const newCanvas = document.createElement('canvas');
-    newCanvas.width = sw; newCanvas.height = sh;
-    const newCtx = newCanvas.getContext('2d');
-    newCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
-    addToHistory(newCanvas.toDataURL()); setActiveTool(null); setCropRect(null); showNotification(t.imageCropped);
-  };
-
-  const handleResizeChange = (field, value) => {
-    let newConfig = { ...resizeConfig };
-    const aspect = currentDimensions.w / currentDimensions.h;
-    if (field === 'scale') { newConfig.scale = value; newConfig.width = Math.round(currentDimensions.w * (value / 100)); newConfig.height = Math.round(currentDimensions.h * (value / 100)); }
-    else if (field === 'width') { const pxVal = fromDisplayValue(value); newConfig.width = pxVal || 0; if (newConfig.maintainAspect) { newConfig.height = Math.round(newConfig.width / aspect); newConfig.scale = Math.round((newConfig.width / currentDimensions.w) * 100); } }
-    else if (field === 'height') { const pxVal = fromDisplayValue(value); newConfig.height = pxVal || 0; if (newConfig.maintainAspect) { newConfig.width = Math.round(newConfig.height * aspect); newConfig.scale = Math.round((newConfig.width / currentDimensions.w) * 100); } }
-    setResizeConfig(newConfig);
-  };
-  const applyResize = () => {
-    const canvas = document.createElement('canvas'); canvas.width = resizeConfig.width; canvas.height = resizeConfig.height;
-    const ctx = canvas.getContext('2d'); const img = new Image();
-    img.onload = () => { ctx.drawImage(img, 0, 0, resizeConfig.width, resizeConfig.height); addToHistory(canvas.toDataURL()); setActiveTool(null); showNotification(`${t.imageResized} ${resizeConfig.width}x${resizeConfig.height}`); };
-    img.src = imageSrc;
-  };
-
-  const handleCanvasClick = (e) => {
-    if (activeTool !== 'bgremove') return;
-    const canvas = canvasRef.current; const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX; const y = (e.clientY - rect.top) * scaleY;
-    removeColorAt(x, y);
-  };
-  const removeColorAt = (startX, startY) => {
-    const canvas = canvasRef.current; const ctx = canvas.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); const data = imageData.data;
-    const pixelIndex = (Math.floor(startY) * canvas.width + Math.floor(startX)) * 4;
-    const targetR = data[pixelIndex]; const targetG = data[pixelIndex + 1]; const targetB = data[pixelIndex + 2]; const tolerance = bgRemoveConfig.tolerance;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i]; const g = data[i + 1]; const b = data[i + 2];
-      const diff = Math.sqrt(Math.pow(r - targetR, 2) + Math.pow(g - targetG, 2) + Math.pow(b - targetB, 2));
-      if (diff < tolerance * 3) data[i + 3] = 0;
-    }
-    ctx.putImageData(imageData, 0, 0);
-  };
-  const handleAutoRemove = () => {
-      const canvas = canvasRef.current; const w = canvas.width; const h = canvas.height;
-      const points = [[0,0], [w-1, 0], [0, h-1], [w-1, h-1]];
-      points.forEach(p => removeColorAt(p[0], p[1])); applyBgRemoval();
-  };
-  const handleOutline = () => {
-      const canvas = canvasRef.current; const ctx = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
-      const imgData = ctx.getImageData(0, 0, w, h); const data = imgData.data;
-      const output = ctx.createImageData(w, h); const outputData = output.data;
-      const getPixel = (x, y) => { if (x < 0 || y < 0 || x >= w || y >= h) return 0; const i = (y * w + x) * 4; return (data[i] + data[i+1] + data[i+2]) / 3; };
-      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) {
-              const gx = -1 * getPixel(x-1, y-1) + 1 * getPixel(x+1, y-1) + -2 * getPixel(x-1, y) + 2 * getPixel(x+1, y) + -1 * getPixel(x-1, y+1) + 1 * getPixel(x+1, y+1);
-              const gy = -1 * getPixel(x-1, y-1) + -2 * getPixel(x, y-1) + -1 * getPixel(x+1, y-1) + 1 * getPixel(x-1, y+1) + 2 * getPixel(x, y+1) + 1 * getPixel(x+1, y+1);
-              const mag = Math.sqrt(gx*gx + gy*gy);
-              const i = (y * w + x) * 4; const val = 255 - mag;
-              outputData[i] = val; outputData[i+1] = val; outputData[i+2] = val; outputData[i+3] = 255;
-      }}
-      ctx.putImageData(output, 0, 0); applyBgRemoval();
-  };
-  const applyBgRemoval = () => { addToHistory(canvasRef.current.toDataURL()); setActiveTool(null); showNotification(t.bgRemoved); };
-
-  const applyText = () => {
-      const canvas = canvasRef.current; const ctx = canvas.getContext('2d');
-      ctx.fillStyle = textConfig.color; const fs = (textConfig.size / 1000) * canvas.width; 
-      ctx.font = `${fs}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(textConfig.text, textConfig.x * canvas.width, textConfig.y * canvas.height);
-      addToHistory(canvas.toDataURL()); setActiveTool(null); showNotification(t.textAdded);
-  };
-
-  const handleOverlayUpload = async (e) => { const file = e.target.files[0]; if (file) { const dataUrl = await readFileAsDataURL(file); const img = await loadImage(dataUrl); setOverlayConfig({ ...overlayConfig, src: dataUrl, imgObj: img }); } };
-  const applyOverlay = () => {
-      if (!overlayConfig.imgObj) return;
-      const canvas = canvasRef.current; const ctx = canvas.getContext('2d'); const img = overlayConfig.imgObj;
-      const aspect = img.width / img.height; const targetW = overlayConfig.scale * canvas.width; const targetH = targetW / aspect;
-      const x = (overlayConfig.x * canvas.width) - (targetW / 2); const y = (overlayConfig.y * canvas.height) - (targetH / 2);
-      ctx.drawImage(img, x, y, targetW, targetH);
-      addToHistory(canvas.toDataURL()); setActiveTool(null); setOverlayConfig({ ...overlayConfig, src: null, imgObj: null }); showNotification(t.overlayAdded);
-  };
-
-  // --- VIDEO & GIF LOGIC ---
-  const handleCreateGif = () => {
-    if (!videoRef.current || !window.gifshot) {
-        showNotification("GIF library not loaded");
-        return;
-    }
-    setGifConfig({...gifConfig, generating: true});
-    
-    // Use gifshot
-    window.gifshot.createGIF({
-        video: [videoSrc],
-        gifWidth: 300, // Small preview size
-        gifHeight: 300 * (videoRef.current.videoHeight / videoRef.current.videoWidth),
-        interval: 0.1, // 10fps
-        numFrames: gifConfig.duration * 10,
-        text: '',
-        fontWeight: 'normal',
-        fontSize: '16px',
-        fontFamily: 'sans-serif',
-        fontColor: '#ffffff',
-        textAlign: 'center',
-        textBaseline: 'bottom',
-        sampleInterval: 10,
-        numWorkers: 2
-    }, (obj) => {
-        if (!obj.error) {
-            const image = obj.image;
-            // Create download link
-            const link = document.createElement('a');
-            link.href = image;
-            link.download = `${exportConfig.name}.gif`;
-            link.click();
-            showNotification(t.imageDownloaded);
-        } else {
-            showNotification("GIF generation failed");
         }
-        setGifConfig({...gifConfig, generating: false});
-    });
-  };
 
-  const captureVideoFrame = () => {
-      if (videoRef.current) {
-          const canvas = document.createElement('canvas');
-          canvas.width = videoRef.current.videoWidth;
-          canvas.height = videoRef.current.videoHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(videoRef.current, 0, 0);
-          const dataUrl = canvas.toDataURL();
-          // Switch to Image Mode
-          setVideoSrc(null);
-          setImageSrc(dataUrl);
-          setHistory([dataUrl]);
-          setHistoryIndex(0);
-          showNotification("Frame captured!");
-      }
-  };
+        function renderCropOverlay(container) {
+            const { x, y, w, h } = state.crop.rect;
+            const el = document.createElement('div');
+            el.className = 'absolute shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] cursor-move flex items-center justify-center group pointer-events-auto';
+            el.style.left = (x * 100) + '%';
+            el.style.top = (y * 100) + '%';
+            el.style.width = (w * 100) + '%';
+            el.style.height = (h * 100) + '%';
+            el.style.outline = '2px solid white';
+            
+            // Grid
+            el.innerHTML = `
+                <div class="absolute inset-0 flex flex-col justify-between opacity-50 pointer-events-none"><div class="w-full h-px bg-white/50 mt-[33%]"></div><div class="w-full h-px bg-white/50 mb-[33%]"></div></div>
+                <div class="absolute inset-0 flex justify-between opacity-50 pointer-events-none"><div class="h-full w-px bg-white/50 ml-[33%]"></div><div class="h-full w-px bg-white/50 mr-[33%]"></div></div>
+                <div class="resize-handle top-0 left-0 cursor-nw-resize" onmousedown="startDrag(event, 'nw')"></div>
+                <div class="resize-handle top-0 right-0 cursor-ne-resize" onmousedown="startDrag(event, 'ne')"></div>
+                <div class="resize-handle bottom-0 left-0 cursor-sw-resize" onmousedown="startDrag(event, 'sw')"></div>
+                <div class="resize-handle bottom-0 right-0 cursor-se-resize" onmousedown="startDrag(event, 'se')"></div>
+            `;
+            el.onmousedown = (e) => { if(e.target === el) startDrag(e, 'move'); };
+            container.appendChild(el);
+        }
 
-  // --- EXPORT / CONVERT LOGIC ---
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    const { format, quality, name } = exportConfig;
-    let extension = format.split('/')[1];
-    if (format === 'image/svg+xml') extension = 'svg';
-    link.download = `${name}.${extension}`;
-    
-    const canvas = canvasRef.current;
-    
-    if (format === 'image/jpeg') {
-        // Handle transparency for JPG
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-        const ctx = tempCanvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0, tempCanvas.width, tempCanvas.height);
-        ctx.drawImage(canvas, 0, 0);
-        link.href = tempCanvas.toDataURL(format, quality);
-    } else if (format === 'image/svg+xml') {
-        // Embed Raster in SVG
-        const dataUrl = canvas.toDataURL('image/png');
-        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}"><image href="${dataUrl}" width="${canvas.width}" height="${canvas.height}"/></svg>`;
-        const blob = new Blob([svgContent], {type: 'image/svg+xml'});
-        link.href = URL.createObjectURL(blob);
-    } else {
-        link.href = canvas.toDataURL(format, quality);
-    }
-    link.click();
-    showNotification(t.imageDownloaded);
-  };
+        function renderTextOverlay(container) {
+            const el = document.createElement('div');
+            const { x, y, text, color, size } = state.text;
+            // Font size calc relative to canvas width
+            const fs = (size / 1000) * state.currentDims.w;
+            
+            el.style.position = 'absolute';
+            el.style.left = (x * 100) + '%';
+            el.style.top = (y * 100) + '%';
+            el.style.transform = 'translate(-50%, -50%)';
+            el.style.cursor = 'move';
+            el.style.color = color;
+            el.style.fontSize = fs + 'px';
+            el.style.lineHeight = '1';
+            el.style.fontWeight = 'bold';
+            el.style.textShadow = '0 2px 4px rgba(0,0,0,0.5)';
+            el.style.whiteSpace = 'nowrap';
+            el.style.border = '1px dashed rgba(255,255,255,0.5)';
+            el.style.pointerEvents = 'auto';
+            el.innerText = text;
+            
+            el.onmousedown = (e) => startDragElement(e, 'text');
+            container.appendChild(el);
+        }
 
-  const getRootStyle = () => {
-    switch(fontSize) {
-      case 'small': return { fontSize: '14px' };
-      case 'large': return { fontSize: '18px' };
-      default: return { fontSize: '16px' };
-    }
-  };
+        function renderImageOverlay(container) {
+            const el = document.createElement('div');
+            const { x, y, scale, src } = state.overlay;
+            
+            el.style.position = 'absolute';
+            el.style.left = (x * 100) + '%';
+            el.style.top = (y * 100) + '%';
+            el.style.transform = 'translate(-50%, -50%)';
+            el.style.cursor = 'move';
+            el.style.pointerEvents = 'auto';
+            el.className = 'group border border-dashed border-transparent hover:border-violet-500';
+            
+            const img = document.createElement('img');
+            img.src = src;
+            img.style.width = (scale * state.currentDims.w) + 'px';
+            img.style.pointerEvents = 'none';
+            img.className = 'shadow-xl';
+            
+            el.appendChild(img);
+            el.onmousedown = (e) => startDragElement(e, 'overlay');
+            container.appendChild(el);
+        }
 
-  if (!imageSrc && !videoSrc) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col" style={getRootStyle()}>
-        <div className="flex justify-end p-4 gap-2">
-             <button onClick={() => setLang(l => l === 'en' ? 'zh' : 'en')} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[0.875em] font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-                <Globe size={16} /> <span>{lang === 'en' ? 'English' : '繁體中文'}</span>
-             </button>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-4 -mt-16">
-          <div className="max-w-xl w-full text-center space-y-8">
-            <div className="space-y-2">
-               <div className="flex justify-center mb-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200"><Sparkles size={40} /></div>
-               </div>
-              <h1 className="text-[2.25em] font-bold text-slate-900 tracking-tight">{t.appTitle}</h1>
-              <p className="text-slate-500 text-[1.125em]">{t.subtitle}</p>
-            </div>
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
-              <div className="relative bg-white rounded-xl p-12 border-2 border-dashed border-slate-300 hover:border-violet-500 transition-colors cursor-pointer flex flex-col items-center justify-center space-y-4 shadow-sm">
-                 <input type="file" accept="image/*,video/*,.svg" onChange={handleUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                 <div className="w-16 h-16 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center"><Upload size={32} /></div>
-                 <div className="text-center">
-                   <p className="text-[1.125em] font-medium text-slate-700">{t.uploadTitle}</p>
-                   <p className="text-[0.875em] text-slate-400 mt-1">{t.uploadDesc}</p>
-                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-screen flex flex-col bg-slate-100 overflow-hidden font-sans" style={getRootStyle()}>
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
-        <div className="flex items-center gap-2 font-bold text-[1.25em] text-slate-800">
-          <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm"><Sparkles size={18} /></div>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-indigo-700 font-extrabold tracking-tight">{t.appTitle}</span>
-        </div>
-        <div className="flex items-center gap-4">
-           <button onClick={() => setFontSize(f => f === 'small' ? 'normal' : f === 'normal' ? 'large' : 'small')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-[0.75em] font-medium text-slate-600 hover:bg-slate-100 transition-colors" title="Toggle Font Size"><Type size={14} /><span className="capitalize">{fontSize}</span></button>
-           <button onClick={() => setLang(l => l === 'en' ? 'zh' : 'en')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-[0.75em] font-medium text-slate-600 hover:bg-slate-100 transition-colors"><Globe size={14} /><span>{lang === 'en' ? '中/EN' : 'EN/中'}</span></button>
-           <div className="h-6 w-px bg-slate-200 mx-2"></div>
-           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-              <button onClick={() => setZoom(z => Math.max(0.05, z - 0.1))} className="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"><ZoomOut size={16} /></button>
-              <span className="text-[0.75em] font-medium w-12 text-center text-slate-600">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(5, z + 0.1))} className="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"><ZoomIn size={16} /></button>
-           </div>
-           <div className="h-6 w-px bg-slate-200 mx-2"></div>
-           {!videoSrc && (
-             <>
-                <button onClick={handleUndo} disabled={historyIndex <= 0} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium transition-colors ${historyIndex > 0 ? 'hover:bg-slate-100 text-slate-700' : 'text-slate-300 cursor-not-allowed'}`}><Undo size={16} /><span>{t.undo}</span></button>
-                <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium transition-colors ${historyIndex < history.length - 1 ? 'hover:bg-slate-100 text-slate-700' : 'text-slate-300 cursor-not-allowed'}`}><Redo size={16} /><span>{t.redo}</span></button>
-             </>
-           )}
-           <button onClick={() => { setImageSrc(null); setVideoSrc(null); setHistory([]); }} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.875em] font-medium text-red-600 hover:bg-red-50 transition-colors"><Trash2 size={16} /><span className="hidden sm:inline">{t.reset}</span></button>
-        </div>
-      </header>
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT TOOLBAR */}
-        <div className="w-20 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-4 shrink-0 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.05)] overflow-y-auto">
-           {videoSrc ? (
-               <>
-                 <ToolButton icon={<FileVideo size={24} />} label="Video" isActive={true} onClick={() => {}} />
-                 <ToolButton icon={<RefreshCw size={24} />} label="GIF" isActive={activeTool === 'gif'} onClick={() => setActiveTool('gif')} />
-               </>
-           ) : (
-               <>
-                 <ToolButton icon={<Crop size={24} />} label={t.crop} isActive={activeTool === 'crop'} onClick={initCrop} />
-                 <ToolButton icon={<Maximize2 size={24} />} label={t.resize} isActive={activeTool === 'resize'} onClick={() => { setActiveTool('resize'); setBgRemoveConfig(prev => ({...prev, active: false})); }} />
-                 <ToolButton icon={<Eraser size={24} />} label={t.removeBg} isActive={activeTool === 'bgremove'} onClick={() => { setActiveTool('bgremove'); setBgRemoveConfig(prev => ({...prev, active: true})); }} />
-                 <div className="w-8 h-px bg-slate-200 my-1"></div>
-                 <ToolButton icon={<Type size={24} />} label={t.text} isActive={activeTool === 'text'} onClick={() => setActiveTool('text')} />
-                 <ToolButton icon={<ImageIcon size={24} />} label={t.overlay} isActive={activeTool === 'overlay'} onClick={() => setActiveTool('overlay')} />
-                 <div className="flex-1"></div>
-                 <button onClick={() => { setActiveTool('export'); setBgRemoveConfig(prev => ({...prev, active: false})); }} className={`w-14 h-14 mb-4 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 ${activeTool === 'export' ? 'bg-emerald-600 text-white ring-2 ring-emerald-200 ring-offset-2' : 'bg-gradient-to-br from-slate-800 to-slate-900 text-white hover:from-slate-700 hover:to-slate-800'}`}>
-                    <RefreshCw size={24} /><span className="text-[0.65em] font-bold">{t.convert}</span>
-                 </button>
-               </>
-           )}
-        </div>
-
-        {/* CENTER CANVAS / VIDEO */}
-        <div ref={canvasContainerRef} className="flex-1 relative bg-slate-50/50 overflow-hidden flex items-center justify-center p-0 checkered-bg select-none" onWheel={handleWheel}>
-           {notification && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-full text-[0.875em] font-medium shadow-lg animate-fade-in-down">{notification}</div>}
-           <div className="relative shadow-2xl transition-transform duration-100 ease-out" style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}>
-              {videoSrc ? (
-                  <video 
-                     ref={videoRef}
-                     src={videoSrc} 
-                     controls 
-                     className="block bg-black"
-                     style={{ maxHeight: '80vh', maxWidth: '80vw' }}
-                  />
-              ) : (
-                  <>
-                    <canvas ref={canvasRef} className={`block bg-white ${activeTool === 'bgremove' ? 'cursor-crosshair' : 'cursor-default'}`} onClick={handleCanvasClick} />
-                    {activeTool === 'crop' && cropRect && <CropOverlay rect={cropRect} setRect={setCropRect} canvasRef={canvasRef} lockAspect={lockCropAspect} />}
-                    {activeTool === 'text' && (
-                        <DraggableOverlay x={textConfig.x} y={textConfig.y} onMove={(x, y) => setTextConfig({...textConfig, x, y})} canvasRef={canvasRef}>
-                            <div style={{ color: textConfig.color, fontSize: `${(textConfig.size / 1000) * (canvasRef.current ? canvasRef.current.width : 1000)}px`, lineHeight: 1, whiteSpace: 'nowrap', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }} className="font-sans font-bold select-none cursor-move">{textConfig.text}</div>
-                        </DraggableOverlay>
-                    )}
-                    {activeTool === 'overlay' && overlayConfig.src && (
-                        <DraggableOverlay x={overlayConfig.x} y={overlayConfig.y} onMove={(x, y) => setOverlayConfig({...overlayConfig, x, y})} canvasRef={canvasRef}>
-                            <img src={overlayConfig.src} alt="Overlay" style={{ width: `${overlayConfig.scale * (canvasRef.current ? canvasRef.current.width : 100)}px`, pointerEvents: 'none' }} className="shadow-xl" />
-                        </DraggableOverlay>
-                    )}
-                  </>
-              )}
-           </div>
-        </div>
-
-        {/* RIGHT SETTINGS PANEL */}
-        {activeTool && (
-          <div className="w-80 bg-white border-l border-slate-200 p-6 flex flex-col shrink-0 animate-slide-in-right z-10 shadow-xl overflow-y-auto">
-             {/* ... Crop/Resize/BG/Text/Overlay (Same as before) ... */}
-             
-             {/* REPEATED UI BLOCKS (Keep existing) */}
-             {activeTool === 'crop' && (
-               <>
-                 <PanelHeader title={t.cropImage} icon={<Crop size={18} />} onClose={resetTools} />
-                 {/* ... (Previous Crop UI) ... */}
-                 <div className="space-y-6 mt-6">
-                    <p className="text-[0.875em] text-slate-500">{t.dragHandles}</p>
-                    <div className="grid grid-cols-3 gap-2">
-                       <AspectRatioBtn label={t.free} onClick={() => { setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }); setLockCropAspect(false); }} active={!lockCropAspect} />
-                       <AspectRatioBtn label={t.original} onClick={() => { setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }); setLockCropAspect(true); }} />
-                       <AspectRatioBtn label="1:1" onClick={() => setCropRatio(1, 1)} />
-                       <AspectRatioBtn label="16:9" onClick={() => setCropRatio(16, 9)} />
-                       <AspectRatioBtn label="9:16" onClick={() => setCropRatio(9, 16)} />
-                       <AspectRatioBtn label="4:3" onClick={() => setCropRatio(4, 3)} />
-                       <AspectRatioBtn label="1920x600" onClick={() => setFixedCrop(1920, 600)} />
-                       <AspectRatioBtn label="800x600" onClick={() => setFixedCrop(800, 600)} />
+        function renderSettingsPanel() {
+            const panel = document.getElementById('settings-panel');
+            const tool = state.activeTool;
+            
+            if (!tool) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+            
+            let html = `
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                    <div class="flex items-center gap-2 text-slate-800 font-semibold">
+                        <i data-lucide="${getToolIcon(tool)}" class="w-4 h-4"></i> <span>${t(getToolLabel(tool))}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                          <input type="checkbox" id="cropAspect" checked={lockCropAspect} onChange={(e) => setLockCropAspect(e.target.checked)} className="rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
-                          <label htmlFor="cropAspect" className="text-[0.875em] text-slate-600">{t.lockAspect}</label>
-                          <div className="flex-1"></div>
-                          {lockCropAspect && <button onClick={handleFitMax} className="text-[0.75em] bg-violet-50 text-violet-700 px-2 py-1 rounded border border-violet-100 hover:bg-violet-100 flex items-center gap-1" title="Fit Max Area"><Maximize size={12} />{t.fitMax}</button>}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                          <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.width} ({UNITS[activeUnit].label})</label>
-                          <input type="number" step="0.1" value={toDisplayValue(cropRect.w * currentDimensions.w)} onChange={(e) => updateCropDimension('width', e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                      </div>
-                      <div>
-                          <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.height} ({UNITS[activeUnit].label})</label>
-                          <input type="number" step="0.1" value={toDisplayValue(cropRect.h * currentDimensions.h)} onChange={(e) => updateCropDimension('height', e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                      </div>
-                    </div>
-                    <ActionButton onClick={applyCrop} primary label={t.applyCrop} />
-                 </div>
-               </>
-             )}
+                    <button onclick="resetTools()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            `;
 
-             {activeTool === 'resize' && (
-               <>
-                 <PanelHeader title={t.resizeImage} icon={<Maximize2 size={18} />} onClose={resetTools} />
-                 <div className="space-y-6 mt-6">
-                    <div className="space-y-4">
-                       <div>
-                         <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.percentage}</label>
-                         <div className="flex items-center gap-3">
-                           <input type="range" min="1" max="200" value={resizeConfig.scale} onChange={(e) => handleResizeChange('scale', parseInt(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600" />
-                           <span className="text-[0.875em] font-medium w-12 text-right">{resizeConfig.scale}%</span>
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div>
-                             <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.width} ({UNITS[activeUnit].label})</label>
-                             <input type="number" step="0.1" value={toDisplayValue(resizeConfig.width)} onChange={(e) => handleResizeChange('width', e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                          </div>
-                          <div>
-                             <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.height} ({UNITS[activeUnit].label})</label>
-                             <input type="number" step="0.1" value={toDisplayValue(resizeConfig.height)} onChange={(e) => handleResizeChange('height', e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                          </div>
-                       </div>
-                       <div className="flex items-center gap-2">
-                          <input type="checkbox" id="aspect" checked={resizeConfig.maintainAspect} onChange={(e) => setResizeConfig({...resizeConfig, maintainAspect: e.target.checked})} className="rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
-                          <label htmlFor="aspect" className="text-[0.875em] text-slate-600">{t.lockAspect}</label>
-                       </div>
-                       
-                       {/* SIZE PREVIEW */}
-                       <div className="bg-slate-50 p-3 rounded border border-slate-100 flex justify-between items-center">
-                         <span className="text-[0.75em] font-semibold text-slate-500 uppercase">{t.estSize}</span>
-                         <span className="text-[0.875em] font-bold text-slate-700">{fileSizePreview || '...'}</span>
-                       </div>
-                    </div>
-                    <ActionButton onClick={applyResize} primary label={t.applyResize} />
-                 </div>
-               </>
-             )}
-
-             {activeTool === 'bgremove' && (
-                <>
-                  <PanelHeader title={t.removeBackground} icon={<Eraser size={18} />} onClose={resetTools} />
-                  <div className="space-y-6 mt-6">
-                     <div className="p-4 bg-violet-50 rounded-lg border border-violet-100">
-                        <p className="text-[0.875em] text-violet-800 font-medium mb-1">{t.magicWand}</p>
-                        <p className="text-[0.75em] text-violet-600">{t.magicWandDesc}</p>
-                     </div>
-                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={handleAutoRemove} className="py-2 bg-white border border-slate-200 rounded-md text-[0.8em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2"><Wand2 size={14} /> {t.autoRemove}</button>
-                        <button onClick={handleOutline} className="py-2 bg-white border border-slate-200 rounded-md text-[0.8em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2"><ScanLine size={14} /> {t.outlineOnly}</button>
-                     </div>
-                     <div>
-                        <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.tolerance}</label>
-                        <div className="flex items-center gap-3">
-                           <input type="range" min="1" max="100" value={bgRemoveConfig.tolerance} onChange={(e) => setBgRemoveConfig({...bgRemoveConfig, tolerance: parseInt(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600" />
-                           <span className="text-[0.875em] font-medium w-8 text-right">{bgRemoveConfig.tolerance}</span>
+            // Tool Specific Content
+            if (tool === 'crop') {
+                html += `
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-3 gap-2">
+                            ${aspectBtn('Free', 'free', !state.crop.lockAspect)}
+                            ${aspectBtn('Original', 'original', state.crop.lockAspect)}
+                            ${ratioBtn('1:1', 1, 1)} ${ratioBtn('16:9', 16, 9)} ${ratioBtn('9:16', 9, 16)} ${ratioBtn('4:3', 4, 3)}
+                            <button onclick="setFixedCrop(1920, 600)" class="py-2 px-1 rounded-md text-[0.75em] font-medium border border-slate-200 text-slate-600 hover:border-slate-300">1920x600</button>
+                            <button onclick="setFixedCrop(800, 600)" class="py-2 px-1 rounded-md text-[0.75em] font-medium border border-slate-200 text-slate-600 hover:border-slate-300">800x600</button>
                         </div>
-                     </div>
-                     <ActionButton onClick={applyBgRemoval} primary label={t.done} />
-                  </div>
-                </>
-             )}
-
-             {activeTool === 'text' && (
-               <>
-                 <PanelHeader title={t.addText} icon={<Type size={18} />} onClose={resetTools} />
-                 <div className="space-y-6 mt-6">
-                    <div>
-                        <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.textInput}</label>
-                        <textarea rows="3" value={textConfig.text} onChange={(e) => setTextConfig({...textConfig, text: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 text-[0.875em] text-slate-600">
+                                <input type="checkbox" ${state.crop.lockAspect ? 'checked' : ''} onchange="toggleLockAspect(this.checked)" class="rounded text-violet-600">
+                                ${t('lockAspect')}
+                            </label>
+                            ${state.crop.lockAspect ? `<button onclick="handleFitMax()" class="text-[0.75em] bg-violet-50 text-violet-700 px-2 py-1 rounded hover:bg-violet-100 flex items-center gap-1"><i data-lucide="maximize" class="w-3 h-3"></i> ${t('fitMax')}</button>` : ''}
+                        </div>
+                        <button onclick="applyCrop()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700 flex items-center justify-center gap-2"><i data-lucide="check" class="w-4 h-4"></i> ${t('applyCrop')}</button>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                `;
+            } else if (tool === 'resize') {
+                html += `
+                    <div class="space-y-4">
                         <div>
-                             <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.textColor}</label>
-                             <input type="color" value={textConfig.color} onChange={(e) => setTextConfig({...textConfig, color: e.target.value})} className="w-full h-10 p-1 rounded cursor-pointer" />
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('percentage')}</label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" min="1" max="200" value="${state.resize.scale}" oninput="handleResizeChange('scale', this.value)" class="w-full">
+                                <span class="text-[0.875em] font-medium w-12 text-right">${state.resize.scale}%</span>
+                            </div>
                         </div>
-                        <div>
-                             <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.textSize}</label>
-                             <input type="number" value={textConfig.size} onChange={(e) => setTextConfig({...textConfig, size: parseInt(e.target.value)})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                        </div>
-                    </div>
-                    <ActionButton onClick={applyText} primary label={t.applyText} />
-                 </div>
-               </>
-             )}
-
-             {activeTool === 'overlay' && (
-               <>
-                 <PanelHeader title={t.addOverlay} icon={<ImageIcon size={18} />} onClose={resetTools} />
-                 <div className="space-y-6 mt-6">
-                    {!overlayConfig.src ? (
-                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 hover:border-violet-400 transition-colors relative cursor-pointer">
-                            <input type="file" accept="image/*" onChange={handleOverlayUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                            <Upload size={24} className="text-slate-400 mb-2" />
-                            <span className="text-[0.875em] font-medium text-slate-600">{t.uploadOverlay}</span>
-                        </div>
-                    ) : (
-                        <>
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.overlaySize}</label>
-                                <input type="range" min="0.1" max="1.5" step="0.05" value={overlayConfig.scale} onChange={(e) => setOverlayConfig({...overlayConfig, scale: parseFloat(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600" />
+                                <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('width')} (px)</label>
+                                <input type="number" value="${state.resize.width}" onchange="handleResizeChange('width', this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em]">
                             </div>
-                            <div className="flex gap-2">
-                                <button onClick={() => setOverlayConfig({...overlayConfig, src: null})} className="flex-1 py-2 border border-slate-300 rounded text-slate-600 hover:bg-slate-50 text-[0.875em]">Change Image</button>
+                            <div>
+                                <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('height')} (px)</label>
+                                <input type="number" value="${state.resize.height}" onchange="handleResizeChange('height', this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em]">
                             </div>
-                            <ActionButton onClick={applyOverlay} primary label={t.applyOverlay} />
-                        </>
-                    )}
-                 </div>
-               </>
-             )}
-
-             {/* GIF CONVERTER PANEL */}
-             {activeTool === 'gif' && (
-                <>
-                  <PanelHeader title={t.videoToGif} icon={<RefreshCw size={18} />} onClose={resetTools} />
-                  <div className="space-y-6 mt-6">
-                     <div className="p-4 bg-violet-50 rounded-lg border border-violet-100">
-                        <p className="text-[0.875em] text-violet-800 font-medium mb-1">GIF Maker</p>
-                        <p className="text-[0.75em] text-violet-600">Captures the first few seconds of your video to create an animated GIF.</p>
-                     </div>
-                     
-                     <div>
-                        <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.gifDuration}</label>
-                        <input type="range" min="1" max="10" value={gifConfig.duration} onChange={(e) => setGifConfig({...gifConfig, duration: parseInt(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600" />
-                        <span className="text-[0.875em] font-medium w-full text-right block mt-1">{gifConfig.duration}s</span>
-                     </div>
-
-                     <ActionButton onClick={handleCreateGif} primary label={gifConfig.generating ? t.gifGenerating : t.createGif} />
-                     
-                     <div className="w-full h-px bg-slate-200 my-2"></div>
-                     <p className="text-[0.875em] text-slate-500 font-medium">{t.videoFrame}</p>
-                     <button onClick={captureVideoFrame} className="w-full py-2.5 px-4 bg-white border border-slate-300 rounded-lg text-[0.9em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2">
-                        <ScanLine size={16} /> {t.captureFrame}
-                     </button>
-                  </div>
-                </>
-             )}
-
-             {/* EXPORT / CONVERTER PANEL */}
-             {activeTool === 'export' && (
-                <>
-                  <PanelHeader title={t.exportImage} icon={<Download size={18} />} onClose={resetTools} />
-                  <div className="space-y-6 mt-6">
-                     <div>
-                        <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.fileName}</label>
-                        <input type="text" value={exportConfig.name} onChange={(e) => setExportConfig({...exportConfig, name: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                     </div>
-                     <div>
-                        <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.format}</label>
-                        <div className="grid grid-cols-2 gap-2">
-                           {['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].map(fmt => (
-                              <button key={fmt} onClick={() => setExportConfig({...exportConfig, format: fmt})} className={`px-3 py-2 text-[0.75em] font-medium rounded-md border ${exportConfig.format === fmt ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }`}>
-                                 {fmt.split('/')[1].replace('+xml','').toUpperCase()}
-                              </button>
-                           ))}
                         </div>
-                     </div>
-                     {exportConfig.format !== 'image/png' && exportConfig.format !== 'image/svg+xml' && (
+                        <label class="flex items-center gap-2 text-[0.875em] text-slate-600">
+                            <input type="checkbox" ${state.resize.maintainAspect ? 'checked' : ''} onchange="toggleResizeAspect(this.checked)" class="rounded text-violet-600"> ${t('lockAspect')}
+                        </label>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100 flex justify-between items-center">
+                            <span class="text-[0.75em] font-semibold text-slate-500 uppercase">${t('estSize')}</span>
+                            <span class="text-[0.875em] font-bold text-slate-700" id="resize-est-size">...</span>
+                        </div>
+                        <button onclick="applyResize()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${t('applyResize')}</button>
+                    </div>
+                `;
+                calculateFileSize('resize');
+            } else if (tool === 'bgremove') {
+                html += `
+                    <div class="space-y-6">
+                        <div class="p-4 bg-violet-50 rounded-lg border border-violet-100">
+                            <p class="text-[0.875em] text-violet-800 font-medium mb-1">${t('magicWand')}</p>
+                            <p class="text-[0.75em] text-violet-600">${t('magicWandDesc')}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="handleAutoRemove()" class="py-2 bg-white border border-slate-200 rounded-md text-[0.8em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2"><i data-lucide="wand-2" class="w-3 h-3"></i> ${t('autoRemove')}</button>
+                            <button onclick="handleOutline()" class="py-2 bg-white border border-slate-200 rounded-md text-[0.8em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2"><i data-lucide="scan-line" class="w-3 h-3"></i> ${t('outlineOnly')}</button>
+                        </div>
                         <div>
-                           <label className="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">{t.quality}</label>
-                           <div className="flex items-center gap-3">
-                              <input type="range" min="0" max="1" step="0.1" value={exportConfig.quality} onChange={(e) => setExportConfig({...exportConfig, quality: parseFloat(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600" />
-                              <span className="text-[0.875em] font-medium w-8 text-right">{Math.round(exportConfig.quality * 100)}%</span>
-                           </div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('tolerance')}</label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" min="1" max="100" value="${state.bgRemove.tolerance}" oninput="state.bgRemove.tolerance = parseInt(this.value); this.nextElementSibling.innerText = this.value" class="w-full">
+                                <span class="text-[0.875em] font-medium w-8 text-right">${state.bgRemove.tolerance}</span>
+                            </div>
                         </div>
-                     )}
-                     <div className="bg-slate-50 p-3 rounded border border-slate-100 flex justify-between items-center">
-                         <span className="text-[0.75em] font-semibold text-slate-500 uppercase">{t.estSize}</span>
-                         <span className="text-[0.875em] font-bold text-slate-700">{fileSizePreview || '...'}</span>
-                     </div>
-                     <div className="pt-4 border-t border-slate-100">
-                        <ActionButton onClick={handleDownload} primary label={t.downloadImage} />
-                     </div>
-                  </div>
-                </>
-             )}
-          </div>
-        )}
-      </div>
-      
-      <style>{`
-         .checkered-bg { background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-         @keyframes fade-in-down { 0% { opacity: 0; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
-         @keyframes slide-in-right { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-      `}</style>
-    </div>
-  );
-}
+                        <button onclick="applyBgRemoval()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${t('done')}</button>
+                    </div>
+                `;
+            } else if (tool === 'text') {
+                html += `
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('textInput')}</label>
+                            <textarea rows="3" oninput="updateTextConfig('text', this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em] focus:outline-none focus:ring-2 focus:ring-violet-500">${state.text.text}</textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('textColor')}</label>
+                                <input type="color" value="${state.text.color}" oninput="updateTextConfig('color', this.value)" class="w-full h-10 p-1 rounded cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('textSize')}</label>
+                                <input type="number" value="${state.text.size}" oninput="updateTextConfig('size', parseInt(this.value))" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em]">
+                            </div>
+                        </div>
+                        <button onclick="applyText()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${t('applyText')}</button>
+                    </div>
+                `;
+            } else if (tool === 'overlay') {
+                html += `<div class="space-y-6">`;
+                if (!state.overlay.src) {
+                    html += `
+                        <div onclick="document.getElementById('overlay-upload').click()" class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 hover:border-violet-400 transition-colors cursor-pointer">
+                            <i data-lucide="upload" class="w-6 h-6 text-slate-400 mb-2"></i>
+                            <span class="text-[0.875em] font-medium text-slate-600">${t('uploadOverlay')}</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('overlaySize')}</label>
+                            <input type="range" min="0.1" max="1.5" step="0.05" value="${state.overlay.scale}" oninput="updateOverlayScale(this.value)" class="w-full">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="state.overlay.src = null; renderCanvasArea(); renderSettingsPanel()" class="flex-1 py-2 border border-slate-300 rounded text-slate-600 hover:bg-slate-50 text-[0.875em]">${t('changeImage')}</button>
+                        </div>
+                        <button onclick="applyOverlay()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${t('applyOverlay')}</button>
+                    `;
+                }
+                html += `</div>`;
+            } else if (tool === 'gif') {
+                html += `
+                    <div class="space-y-6">
+                        <div class="p-4 bg-violet-50 rounded-lg border border-violet-100">
+                            <p class="text-[0.875em] text-violet-800 font-medium mb-1">GIF Maker</p>
+                            <p class="text-[0.75em] text-violet-600">Captures the first few seconds of your video.</p>
+                        </div>
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('gifDuration')}</label>
+                            <input type="range" min="1" max="10" value="${state.gif.duration}" oninput="state.gif.duration = parseInt(this.value); this.nextElementSibling.innerText = this.value + 's'" class="w-full">
+                            <span class="text-[0.875em] font-medium w-full text-right block mt-1">${state.gif.duration}s</span>
+                        </div>
+                        <button onclick="handleCreateGif()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${state.gif.generating ? t('generating') : t('createGif')}</button>
+                        <div class="w-full h-px bg-slate-200 my-2"></div>
+                        <p class="text-[0.875em] text-slate-500 font-medium">${t('videoFrame')}</p>
+                        <button onclick="captureVideoFrame()" class="w-full py-2.5 bg-white border border-slate-300 rounded-lg text-[0.9em] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2"><i data-lucide="scan-line" class="w-4 h-4"></i> ${t('captureFrame')}</button>
+                    </div>
+                `;
+            } else if (tool === 'export') {
+                html += `
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('fileName')}</label>
+                            <input type="text" value="${state.export.name}" oninput="state.export.name = this.value" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-[0.875em]">
+                        </div>
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('format')}</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                ${formatBtn('image/jpeg', 'JPG')} ${formatBtn('image/png', 'PNG')} 
+                                ${formatBtn('image/webp', 'WEBP')} ${formatBtn('image/svg+xml', 'SVG')}
+                            </div>
+                        </div>
+                        ${state.export.format !== 'image/png' && state.export.format !== 'image/svg+xml' ? `
+                        <div>
+                            <label class="block text-[0.75em] font-semibold text-slate-500 uppercase mb-1.5">${t('quality')}</label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" min="0" max="1" step="0.1" value="${state.export.quality}" oninput="state.export.quality = parseFloat(this.value); this.nextElementSibling.innerText = Math.round(this.value * 100) + '%'; calculateFileSize('export')" class="w-full">
+                                <span class="text-[0.875em] font-medium w-8 text-right">${Math.round(state.export.quality * 100)}%</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100 flex justify-between items-center">
+                            <span class="text-[0.75em] font-semibold text-slate-500 uppercase">${t('estSize')}</span>
+                            <span class="text-[0.875em] font-bold text-slate-700" id="export-est-size">...</span>
+                        </div>
+                        <button onclick="handleDownload()" class="w-full py-2.5 bg-violet-600 text-white rounded-lg text-[0.9em] font-semibold hover:bg-violet-700">${t('downloadImage')}</button>
+                    </div>
+                `;
+                calculateFileSize('export');
+            }
 
-// --- SUBCOMPONENTS ---
+            panel.innerHTML = html;
+            lucide.createIcons();
+        }
 
-function ToolButton({ icon, label, isActive, onClick }) {
-   return (
-      <button onClick={onClick} className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${isActive ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 scale-105' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'}`}>
-         {icon} <span className="text-[0.65em] font-medium">{label}</span>
-      </button>
-   );
-}
-function PanelHeader({ title, icon, onClose }) {
-   return (
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-         <div className="flex items-center gap-2 text-slate-800 font-semibold">{icon}<span>{title}</span></div>
-         <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
-      </div>
-   );
-}
-function ActionButton({ label, onClick, primary }) {
-   return (
-      <button onClick={onClick} className={`w-full py-2.5 px-4 rounded-lg text-[0.9em] font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${primary ? 'bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-200 active:transform active:scale-95' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
-         {primary && <Check size={16} />}{label}
-      </button>
-   );
-}
-function AspectRatioBtn({ label, onClick, active }) {
-   return (
-      <button onClick={onClick} className={`py-2 px-3 rounded-md text-[0.75em] font-medium border transition-colors ${active ? 'border-violet-200 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>{label}</button>
-   );
-}
+        /** Helper to render buttons in settings */
+        function aspectBtn(label, mode, active) {
+            const click = mode === 'free' ? `setCropRatio(null)` : (mode === 'original' ? `setCropRatio('original')` : '');
+            return `<button onclick="${click}" class="py-2 px-3 rounded-md text-[0.75em] font-medium border transition-colors ${active ? 'border-violet-200 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'}">${t(label.toLowerCase())}</button>`;
+        }
+        function ratioBtn(label, w, h) {
+            return `<button onclick="setCropRatio(${w},${h})" class="py-2 px-3 rounded-md text-[0.75em] font-medium border transition-colors border-slate-200 text-slate-600 hover:border-slate-300">${label}</button>`;
+        }
+        function formatBtn(mime, label) {
+            const active = state.export.format === mime;
+            return `<button onclick="state.export.format = '${mime}'; renderSettingsPanel();" class="px-3 py-2 text-[0.75em] font-medium rounded-md border ${active ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}">${label}</button>`;
+        }
+        function getToolIcon(id) {
+            const map = { crop: 'crop', resize: 'maximize-2', bgremove: 'eraser', text: 'type', overlay: 'image', gif: 'refresh-cw', export: 'download' };
+            return map[id];
+        }
+        function getToolLabel(id) {
+            if(id === 'export') return 'exportImage';
+            if(id === 'bgremove') return 'removeBackground';
+            if(id === 'crop') return 'cropImage';
+            if(id === 'resize') return 'resizeImage';
+            if(id === 'text') return 'addText';
+            if(id === 'overlay') return 'addOverlay';
+            if(id === 'gif') return 'videoToGif';
+            return id;
+        }
 
-// Reusable draggable overlay component for Text and Images
-function DraggableOverlay({ x, y, onMove, children, canvasRef }) {
-    const [isDragging, setIsDragging] = useState(false);
-    const startPos = useRef({ x: 0, y: 0 });
+        /**
+         * INTERACTION LOGIC
+         */
+        
+        // Font Size
+        function toggleFontSize() {
+            const map = { small: 'normal', normal: 'large', large: 'small' };
+            state.fontSize = map[state.fontSize];
+            document.body.className = document.body.className.replace(/text-size-\w+/, `text-size-${state.fontSize}`);
+            updateUI();
+        }
 
-    const handleMouseDown = (e) => {
-        e.stopPropagation();
-        setIsDragging(true);
-        startPos.current = { x: e.clientX, y: e.clientY };
-    };
+        // Lang
+        function toggleLang() {
+            state.lang = state.lang === 'en' ? 'zh' : 'en';
+            updateUI();
+        }
 
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isDragging || !canvasRef.current) return;
-            const canvas = canvasRef.current;
+        // Zoom
+        function adjustZoom(delta) {
+            state.zoom = Math.min(Math.max(0.05, state.zoom + delta), 5);
+            renderCanvasArea();
+            renderHeader();
+        }
+        function handleScrollZoom(e) {
+            if(!state.imageSrc && !state.videoSrc) return;
+            e.preventDefault();
+            adjustZoom(e.deltaY * -0.001);
+        }
+        function fitImageToScreen() {
+            const container = document.getElementById('canvas-container');
+            const padding = 80;
+            const availW = container.clientWidth - padding;
+            const availH = container.clientHeight - padding;
+            const scaleW = availW / state.currentDims.w;
+            const scaleH = availH / state.currentDims.h;
+            state.zoom = Math.min(scaleW, scaleH, 1);
+            renderCanvasArea();
+            renderHeader();
+        }
+
+        // Crop Logic
+        function setCropRatio(w, h) {
+            if (w === null) { state.crop.lockAspect = false; state.crop.rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }; }
+            else if (w === 'original') { state.crop.lockAspect = true; state.crop.rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }; }
+            else {
+                const currentAspect = state.currentDims.w / state.currentDims.h;
+                const targetAspect = w / h;
+                let newW = 0.6;
+                let newH = newW * (currentAspect / targetAspect);
+                if (newH > 0.8) { newH = 0.6; newW = newH * (targetAspect / currentAspect); }
+                state.crop.rect = { x: (1-newW)/2, y: (1-newH)/2, w: newW, h: newH };
+                state.crop.lockAspect = true;
+            }
+            renderCanvasArea();
+            renderSettingsPanel();
+        }
+        function setFixedCrop(w, h) {
+            const aspect = w/h;
+            let pctW = w / state.currentDims.w;
+            let pctH = h / state.currentDims.h;
+            if (pctW > 1 || pctH > 1) {
+                const imgAspect = state.currentDims.w / state.currentDims.h;
+                if (aspect > imgAspect) { pctW = 1.0; pctH = (state.currentDims.w / aspect) / state.currentDims.h; }
+                else { pctH = 1.0; pctW = (state.currentDims.h * aspect) / state.currentDims.w; }
+            }
+            state.crop.rect = { x: (1-pctW)/2, y: (1-pctH)/2, w: pctW, h: pctH };
+            state.crop.lockAspect = true;
+            renderCanvasArea();
+            renderSettingsPanel();
+        }
+        function toggleLockAspect(checked) { state.crop.lockAspect = checked; renderSettingsPanel(); }
+        function handleFitMax() {
+            if (!state.crop.rect) return;
+            const pxW = state.crop.rect.w * state.currentDims.w;
+            const pxH = state.crop.rect.h * state.currentDims.h;
+            const aspect = pxW/pxH;
+            const imgAspect = state.currentDims.w / state.currentDims.h;
+            let newW, newH;
+            if (aspect > imgAspect) { newW = 1.0; const hPx = state.currentDims.w / aspect; newH = hPx / state.currentDims.h; }
+            else { newH = 1.0; const wPx = state.currentDims.h * aspect; newW = wPx / state.currentDims.w; }
+            state.crop.rect = { x: (1-newW)/2, y: (1-newH)/2, w: newW, h: newH };
+            renderCanvasArea();
+        }
+        function applyCrop() {
+            const canvas = document.getElementById('main-canvas');
+            const { x, y, w, h } = state.crop.rect;
+            const sx = x * canvas.width;
+            const sy = y * canvas.height;
+            const sw = w * canvas.width;
+            const sh = h * canvas.height;
+            
+            const newCanvas = document.createElement('canvas');
+            newCanvas.width = sw; newCanvas.height = sh;
+            newCanvas.getContext('2d').drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+            
+            addToHistory(newCanvas.toDataURL());
+            resetTools();
+            showNotification(t('imageCropped'));
+        }
+
+        // Dragging Logic (Unified)
+        let dragInfo = null;
+        function startDrag(e, type) {
+            e.preventDefault(); e.stopPropagation();
+            const { x, y, w, h } = state.crop.rect;
+            const canvas = document.getElementById('main-canvas');
+            let aspect = 1;
+            if(state.crop.rect.h > 0) {
+                const wPx = w * canvas.width; const hPx = h * canvas.height;
+                aspect = wPx / hPx;
+            }
+            dragInfo = { type, startX: e.clientX, startY: e.clientY, startRect: { ...state.crop.rect }, aspect, mode: 'crop' };
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+        }
+        function startDragElement(e, mode) {
+            e.preventDefault(); e.stopPropagation();
+            const startX = mode === 'text' ? state.text.x : state.overlay.x;
+            const startY = mode === 'text' ? state.text.y : state.overlay.y;
+            dragInfo = { type: 'move', startX: e.clientX, startY: e.clientY, initialPos: { x: startX, y: startY }, mode };
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+        }
+        function onDragMove(e) {
+            if (!dragInfo) return;
+            const canvas = document.getElementById('main-canvas');
             const rect = canvas.getBoundingClientRect();
             
-            const dx = (e.clientX - startPos.current.x);
-            const dy = (e.clientY - startPos.current.y);
-            
-            // Convert pixels to percentage movement
-            // NOTE: dx is in screen pixels, need to scale to canvas CSS size
-            // But dragging is normally 1:1 with mouse movement on screen
-            
-            // Calculate new percentage position
-            // Movement in pixels relative to the canvas displayed size
-            const moveX = dx / rect.width; 
-            const moveY = dy / rect.height;
+            if (dragInfo.mode === 'crop') {
+                // Crop Logic (Ported from React)
+                const scaleX = canvas.width / rect.width; 
+                const scaleY = canvas.height / rect.height;
+                const dx = (e.clientX - dragInfo.startX) * scaleX; 
+                const dy = (e.clientY - dragInfo.startY) * scaleY;
+                const dPctX = dx / canvas.width; 
+                const dPctY = dy / canvas.height;
+                
+                let newRect = { ...dragInfo.startRect };
+                const type = dragInfo.type;
 
-            onMove(x + moveX, y + moveY);
-            
-            // Reset start pos for delta calculation next frame
-            startPos.current = { x: e.clientX, y: e.clientY };
-        };
-        const handleMouseUp = () => setIsDragging(false);
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+                if (type === 'move') {
+                    newRect.x = Math.max(0, Math.min(1 - newRect.w, newRect.x + dPctX));
+                    newRect.y = Math.max(0, Math.min(1 - newRect.h, newRect.y + dPctY));
+                } else {
+                    // Resizing
+                    if (type.includes('w')) { const maxD = newRect.x; const safeD = Math.max(-maxD, Math.min(newRect.w - 0.05, dPctX)); newRect.x += safeD; newRect.w -= safeD; }
+                    else if (type.includes('e')) { const maxD = 1 - (newRect.x + newRect.w); const safeD = Math.min(maxD, Math.max(-(newRect.w - 0.05), dPctX)); newRect.w += safeD; }
+                    if (type.includes('n')) { const maxD = newRect.y; const safeD = Math.max(-maxD, Math.min(newRect.h - 0.05, dPctY)); newRect.y += safeD; newRect.h -= safeD; }
+                    else if (type.includes('s')) { const maxD = 1 - (newRect.y + newRect.h); const safeD = Math.min(maxD, Math.max(-(newRect.h - 0.05), dPctY)); newRect.h += safeD; }
+                    
+                    if (state.crop.lockAspect) {
+                        const wPx = newRect.w * canvas.width; const hPx = wPx / dragInfo.aspect; const newH = hPx / canvas.height;
+                        if (newRect.y + newH > 1 && type.includes('s')) {
+                             const maxH = 1 - newRect.y; const maxW = (maxH * canvas.height * dragInfo.aspect) / canvas.width; newRect.h = maxH; newRect.w = maxW;
+                        } else newRect.h = newH;
+                    }
+                }
+                state.crop.rect = newRect;
+                renderCanvasArea();
+            } else {
+                // Element Dragging (Text/Overlay)
+                const dx = (e.clientX - dragInfo.startX) / rect.width;
+                const dy = (e.clientY - dragInfo.startY) / rect.height;
+                const newX = dragInfo.initialPos.x + dx;
+                const newY = dragInfo.initialPos.y + dy;
+                
+                if (dragInfo.mode === 'text') { state.text.x = newX; state.text.y = newY; }
+                else { state.overlay.x = newX; state.overlay.y = newY; }
+                
+                renderCanvasArea();
+            }
         }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, x, y, onMove, canvasRef]);
+        function onDragEnd() {
+            dragInfo = null;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+        }
 
-    // Render positioned element
-    // x, y are center percentages (0.5, 0.5)
-    
-    // We can't know child dimensions easily here without refs, so we center transform
-    
-    return (
-        <div 
-            onMouseDown={handleMouseDown}
-            style={{
-                position: 'absolute',
-                left: `${x * 100}%`,
-                top: `${y * 100}%`,
-                transform: 'translate(-50%, -50%)',
-                cursor: 'move',
-                border: '1px dashed rgba(0,0,0,0.3)',
-                padding: '4px'
-            }}
-            className="group hover:border-violet-500"
-        >
-            {children}
-            {/* Drag Handle Indicator */}
-            <div className="absolute -top-2 -right-2 w-4 h-4 bg-violet-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-    );
-}
+        // Resize Logic
+        function handleResizeChange(field, val) {
+            const aspect = state.currentDims.w / state.currentDims.h;
+            if (field === 'scale') {
+                state.resize.scale = parseInt(val);
+                state.resize.width = Math.round(state.currentDims.w * (val / 100));
+                state.resize.height = Math.round(state.currentDims.h * (val / 100));
+            } else if (field === 'width') {
+                state.resize.width = parseInt(val);
+                if (state.resize.maintainAspect) {
+                    state.resize.height = Math.round(val / aspect);
+                    state.resize.scale = Math.round((val / state.currentDims.w) * 100);
+                }
+            } else if (field === 'height') {
+                state.resize.height = parseInt(val);
+                if (state.resize.maintainAspect) {
+                    state.resize.width = Math.round(val * aspect);
+                    state.resize.scale = Math.round((state.resize.width / state.currentDims.w) * 100);
+                }
+            }
+            renderSettingsPanel(); // Re-render to update inputs
+        }
+        function toggleResizeAspect(checked) { state.resize.maintainAspect = checked; renderSettingsPanel(); }
+        function applyResize() {
+            const canvas = document.createElement('canvas');
+            canvas.width = state.resize.width; canvas.height = state.resize.height;
+            const ctx = canvas.getContext('2d'); const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                addToHistory(canvas.toDataURL()); resetTools(); showNotification(t('imageResized'));
+            };
+            img.src = state.imageSrc;
+        }
 
-function CropOverlay({ rect, setRect, canvasRef, lockAspect }) {
-   const [dragState, setDragState] = useState(null); 
-   const getPixelRect = () => {
-      if (!canvasRef.current) return { left: 0, top: 0, width: 0, height: 0 };
-      const w = canvasRef.current.width; const h = canvasRef.current.height;
-      return { left: rect.x * w, top: rect.y * h, width: rect.w * w, height: rect.h * h };
-   };
-   const px = getPixelRect();
+        // BG Remove
+        function handleCanvasClick(e) {
+            const canvas = document.getElementById('main-canvas');
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            removeColorAt(x, y);
+        }
+        function removeColorAt(startX, startY) {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const idx = (Math.floor(startY) * canvas.width + Math.floor(startX)) * 4;
+            const [tR, tG, tB] = [data[idx], data[idx+1], data[idx+2]];
+            const tol = state.bgRemove.tolerance;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const diff = Math.sqrt(((data[i]-tR)**2) + ((data[i+1]-tG)**2) + ((data[i+2]-tB)**2));
+                if (diff < tol * 3) data[i+3] = 0;
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+        function handleAutoRemove() {
+            const canvas = document.getElementById('main-canvas');
+            const w = canvas.width; const h = canvas.height;
+            [[0,0], [w-1,0], [0,h-1], [w-1,h-1]].forEach(p => removeColorAt(p[0], p[1]));
+            applyBgRemoval();
+        }
+        function handleOutline() {
+            // Simple outline filter (Sobel approximation)
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width; const h = canvas.height;
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            const output = ctx.createImageData(w, h);
+            const od = output.data;
+            
+            const getP = (x, y) => { if(x<0||y<0||x>=w||y>=h) return 0; const i=(y*w+x)*4; return (d[i]+d[i+1]+d[i+2])/3; };
+            for(let y=0; y<h; y++) {
+                for(let x=0; x<w; x++) {
+                    const gx = -getP(x-1,y-1)+getP(x+1,y-1)-2*getP(x-1,y)+2*getP(x+1,y)-getP(x-1,y+1)+getP(x+1,y+1);
+                    const gy = -getP(x-1,y-1)-2*getP(x,y-1)-getP(x+1,y-1)+getP(x-1,y+1)+2*getP(x,y+1)+getP(x+1,y+1);
+                    const mag = 255 - Math.sqrt(gx*gx + gy*gy);
+                    const i = (y*w+x)*4;
+                    od[i]=mag; od[i+1]=mag; od[i+2]=mag; od[i+3]=255;
+                }
+            }
+            ctx.putImageData(output, 0, 0);
+            applyBgRemoval();
+        }
+        function applyBgRemoval() {
+            addToHistory(document.getElementById('main-canvas').toDataURL());
+            resetTools(); showNotification(t('bgRemoved'));
+        }
 
-   const handleMouseDown = (e, type) => {
-      e.preventDefault(); e.stopPropagation();
-      let aspect = 1;
-      if (canvasRef.current && rect.h > 0) { const w = rect.w * canvasRef.current.width; const h = rect.h * canvasRef.current.height; aspect = w / h; }
-      setDragState({ type, startX: e.clientX, startY: e.clientY, startRect: { ...rect }, aspect });
-   };
+        // Text & Overlay
+        function updateTextConfig(key, val) { state.text[key] = val; renderCanvasArea(); }
+        function applyText() {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            const { text, color, size, x, y } = state.text;
+            ctx.fillStyle = color;
+            ctx.font = `bold ${(size/1000)*canvas.width}px sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, x*canvas.width, y*canvas.height);
+            addToHistory(canvas.toDataURL()); resetTools(); showNotification(t('textAdded'));
+        }
+        function handleOverlayFile(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    state.overlay.src = evt.target.result;
+                    renderCanvasArea(); renderSettingsPanel();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function updateOverlayScale(val) { state.overlay.scale = parseFloat(val); renderCanvasArea(); }
+        function applyOverlay() {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+                const aspect = img.width / img.height;
+                const targetW = state.overlay.scale * canvas.width;
+                const targetH = targetW / aspect;
+                const x = (state.overlay.x * canvas.width) - (targetW/2);
+                const y = (state.overlay.y * canvas.height) - (targetH/2);
+                ctx.drawImage(img, x, y, targetW, targetH);
+                addToHistory(canvas.toDataURL()); resetTools(); showNotification(t('overlayAdded'));
+            };
+            img.src = state.overlay.src;
+        }
 
-   useEffect(() => {
-      const handleMouseMove = (e) => {
-         if (!dragState || !canvasRef.current) return;
-         const canvas = canvasRef.current;
-         const rectBound = canvas.getBoundingClientRect();
-         const scaleX = canvas.width / rectBound.width; const scaleY = canvas.height / rectBound.height;
-         const dx = (e.clientX - dragState.startX) * scaleX; const dy = (e.clientY - dragState.startY) * scaleY;
-         const dPctX = dx / canvas.width; const dPctY = dy / canvas.height;
-         let newRect = { ...dragState.startRect };
-         const type = dragState.type;
+        // GIF
+        function handleCreateGif() {
+            if(!gifshot) return;
+            state.gif.generating = true; renderSettingsPanel();
+            const video = document.getElementById('main-video');
+            gifshot.createGIF({
+                video: [state.videoSrc],
+                gifWidth: 300,
+                gifHeight: 300 * (video.videoHeight / video.videoWidth),
+                interval: 0.1, numFrames: state.gif.duration * 10
+            }, (obj) => {
+                state.gif.generating = false; renderSettingsPanel();
+                if(!obj.error) {
+                    const a = document.createElement('a'); a.href = obj.image; a.download = `${state.export.name}.gif`; a.click();
+                    showNotification(t('imageDownloaded'));
+                }
+            });
+        }
+        function captureVideoFrame() {
+            const video = document.getElementById('main-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataUrl = canvas.toDataURL();
+            
+            state.videoSrc = null;
+            state.imageSrc = dataUrl;
+            state.history = [dataUrl];
+            state.historyIndex = 0;
+            state.currentDims = { w: canvas.width, h: canvas.height };
+            state.resize.width = canvas.width; state.resize.height = canvas.height;
+            updateUI();
+        }
 
-         if (type === 'move') {
-            newRect.x = Math.max(0, Math.min(1 - newRect.w, newRect.x + dPctX));
-            newRect.y = Math.max(0, Math.min(1 - newRect.h, newRect.y + dPctY));
-         } else {
-             if (type.includes('w')) { const maxD = newRect.x; const safeD = Math.max(-maxD, Math.min(newRect.w - 0.05, dPctX)); newRect.x += safeD; newRect.w -= safeD; }
-             else if (type.includes('e')) { const maxD = 1 - (newRect.x + newRect.w); const safeD = Math.min(maxD, Math.max(-(newRect.w - 0.05), dPctX)); newRect.w += safeD; }
-             if (type.includes('n')) { const maxD = newRect.y; const safeD = Math.max(-maxD, Math.min(newRect.h - 0.05, dPctY)); newRect.y += safeD; newRect.h -= safeD; }
-             else if (type.includes('s')) { const maxD = 1 - (newRect.y + newRect.h); const safeD = Math.min(maxD, Math.max(-(newRect.h - 0.05), dPctY)); newRect.h += safeD; }
-             if (lockAspect) {
-                const aspect = dragState.aspect;
-                const wPx = newRect.w * canvas.width; const hPx = wPx / aspect; const newH = hPx / canvas.height;
-                if (newRect.y + newH > 1 && type.includes('s')) { const maxH = 1 - newRect.y; const maxW = (maxH * canvas.height * aspect) / canvas.width; newRect.h = maxH; newRect.w = maxW; }
-                else newRect.h = newH;
-             }
-         }
-         setRect(newRect);
-      };
-      const handleMouseUp = () => setDragState(null);
-      if (dragState) { window.addEventListener('mousemove', handleMouseMove); window.addEventListener('mouseup', handleMouseUp); }
-      return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); };
-   }, [dragState, canvasRef, setRect, lockAspect]);
-   const handleStyle = "absolute w-6 h-6 bg-violet-600 border-2 border-white rounded-full shadow-md z-10 transform -translate-x-1/2 -translate-y-1/2";
-   return (
-      <div className="absolute inset-0 pointer-events-none">
-         <div className="absolute shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-auto cursor-move flex items-center justify-center group" style={{ left: px.left, top: px.top, width: px.width, height: px.height, outline: '2px solid white' }} onMouseDown={(e) => handleMouseDown(e, 'move')}>
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50"><div className="w-full h-px bg-white/50 mt-[33%]"></div><div className="w-full h-px bg-white/50 mb-[33%]"></div></div>
-            <div className="absolute inset-0 flex justify-between pointer-events-none opacity-50"><div className="h-full w-px bg-white/50 ml-[33%]"></div><div className="h-full w-px bg-white/50 mr-[33%]"></div></div>
-            <div className={`${handleStyle} top-0 left-0 cursor-nw-resize`} onMouseDown={(e) => handleMouseDown(e, 'nw')} /><div className={`${handleStyle} top-0 right-0 cursor-ne-resize`} onMouseDown={(e) => handleMouseDown(e, 'ne')} /><div className={`${handleStyle} bottom-0 left-0 cursor-sw-resize`} onMouseDown={(e) => handleMouseDown(e, 'sw')} /><div className={`${handleStyle} bottom-0 right-0 cursor-se-resize`} onMouseDown={(e) => handleMouseDown(e, 'se')} />
-         </div>
-      </div>
-   );
-}
+        // Export / File Size
+        function calculateFileSize(mode) {
+            const canvas = document.getElementById('main-canvas');
+            if(!canvas) return;
+            
+            const targetId = mode === 'resize' ? 'resize-est-size' : 'export-est-size';
+            const el = document.getElementById(targetId);
+            if(!el) return;
+            el.innerText = '...';
+
+            setTimeout(() => {
+                let tempCanvas = canvas;
+                if (mode === 'resize') {
+                    tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = state.resize.width; tempCanvas.height = state.resize.height;
+                    tempCanvas.getContext('2d').drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+                }
+                
+                const fmt = state.export.format;
+                if (fmt === 'image/svg+xml') {
+                    // Estimate
+                    const data = tempCanvas.toDataURL('image/png');
+                    el.innerText = formatBytes(data.length);
+                } else {
+                    tempCanvas.toBlob(blob => {
+                        el.innerText = formatBytes(blob ? blob.size : 0);
+                    }, fmt, state.export.quality);
+                }
+            }, 200);
+        }
+
+        function handleDownload() {
+            const canvas = document.getElementById('main-canvas');
+            const link = document.createElement('a');
+            let ext = state.export.format.split('/')[1];
+            if(ext.includes('svg')) ext = 'svg';
+            link.download = `${state.export.name}.${ext}`;
+            
+            if (state.export.format === 'image/jpeg') {
+                const temp = document.createElement('canvas');
+                temp.width = canvas.width; temp.height = canvas.height;
+                const ctx = temp.getContext('2d');
+                ctx.fillStyle = '#FFF'; ctx.fillRect(0,0,temp.width, temp.height);
+                ctx.drawImage(canvas, 0, 0);
+                link.href = temp.toDataURL('image/jpeg', state.export.quality);
+            } else if (state.export.format === 'image/svg+xml') {
+                const data = canvas.toDataURL('image/png');
+                const content = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}"><image href="${data}" width="${canvas.width}" height="${canvas.height}"/></svg>`;
+                link.href = URL.createObjectURL(new Blob([content], {type: 'image/svg+xml'}));
+            } else {
+                link.href = canvas.toDataURL(state.export.format, state.export.quality);
+            }
+            link.click();
+            showNotification(t('imageDownloaded'));
+        }
+
+        // Utils
+        function showNotification(msg) {
+            const el = document.getElementById('notification');
+            el.innerText = msg;
+            el.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); }, 2000);
+        }
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024; const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${['Bytes', 'KB', 'MB', 'GB'][i]}`;
+        }
+
+    </script>
+</body>
+</html>
